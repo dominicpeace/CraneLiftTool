@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from typing import Optional
 
 import matplotlib
@@ -121,51 +122,69 @@ PIVOT_HEIGHT_M = 3.0
 
 
 def plot_duty_point(result: LiftResult, req: LiftRequest) -> Figure:
-    """Side-elevation schematic of the lift: the duty point (working radius, lift height) in space,
-    with the boom drawn from the crane pivot to the hook and the hoist line down to the load.
+    """Working-range diagram (hook height vs working radius) with the duty point plotted.
 
-    Coloured green if the lift is suitable, red if not. Distances are to scale (equal aspect).
+    Draws one arc per boom length — the locus of hook-tip height as the boom luffs, approximated as
+    height = pivot + sqrt(boom_length^2 - radius^2) over the charted radius range — and marks the
+    duty point at (working radius, vertical lift), coloured green if suitable, red if not. Mirrors
+    a manufacturer working-range diagram.
     """
     radius = result.radius_m
     load_h = req.vertical_lift_m
     tip_h = required_height(req)
     color = "#2e7d32" if result.suitable else "#c62828"
+    crane = result.crane
 
-    fig, ax = plt.subplots(figsize=(5, 5))
+    fig, ax = plt.subplots(figsize=(9, 6.5))
+    max_h = max(tip_h, load_h, PIVOT_HEIGHT_M)
+    max_r = max(radius, 1.0)
 
-    # Ground and crane base/pivot.
-    ax.axhline(0, color="#8d6e63", linewidth=1.5, zorder=1)
-    ax.add_patch(plt.Rectangle((-1.4, 0), 2.8, PIVOT_HEIGHT_M, color="#9e9e9e", alpha=0.55, zorder=2))
+    for cfg in crane.boom_configs:
+        length = cfg.boom_length_m
+        r_hi = min(cfg.max_radius_m, length * 0.999)
+        r_lo = min(cfg.min_radius_m, r_hi)
+        if r_hi <= r_lo:
+            continue
+        rs = [r_lo + (r_hi - r_lo) * i / 60 for i in range(61)]
+        hs = [PIVOT_HEIGHT_M + math.sqrt(max(length * length - r * r, 0.0)) for r in rs]
+        max_h, max_r = max(max_h, max(hs)), max(max_r, r_hi)
+        used = result.boom_length_m is not None and abs(length - result.boom_length_m) < 1e-6
+        if used:
+            ax.plot(rs, hs, color="#1f4e79", linewidth=2.6, zorder=4,
+                    label=f"boom {length:.0f} m (used)")
+        else:
+            ax.plot(rs, hs, color="#b8c4d0", linewidth=1.0, zorder=1)
+        # Boom-length label at the top (small-radius) end of the arc.
+        ax.annotate(f"{length:.0f}", xy=(rs[0], hs[0]), fontsize=6, color="#7a8aa0",
+                    ha="right", va="bottom", zorder=2)
 
-    # Boom (pivot -> hook tip) and hoist rope (tip -> load).
-    ax.plot([0, radius], [PIVOT_HEIGHT_M, tip_h], color="#1f4e79", linewidth=2.6, zorder=3,
-            label=(f"boom {result.boom_length_m:.0f} m" if result.boom_length_m else "boom"))
+    # Boom line to the hook and hoist line down to the load.
+    ax.plot([0, radius], [PIVOT_HEIGHT_M, tip_h], color=color, linewidth=1.4, linestyle="-",
+            alpha=0.7, zorder=5)
     ax.plot([radius, radius], [tip_h, load_h], color="#666666", linewidth=1.0, linestyle=":",
-            zorder=3)
+            zorder=5)
 
-    # Duty point = the load in space (working radius, lift height).
-    ax.scatter([radius], [load_h], s=150, color=color, edgecolors="black", linewidths=1.0,
-               zorder=5, label=f"duty point: {req.load_t:.1f} t")
+    # Duty point.
+    ax.scatter([radius], [load_h], s=170, color=color, edgecolors="black", linewidths=1.2,
+               zorder=6, label=f"duty point: {req.load_t:.1f} t @ {radius:.1f} m")
     ax.annotate(
-        f"{req.load_t:.1f} t @ R={radius:.1f} m, h={load_h:.1f} m",
-        xy=(radius, load_h), xytext=(6, 10), textcoords="offset points",
+        f"{req.load_t:.1f} t\nR={radius:.1f} m, h={load_h:.1f} m",
+        xy=(radius, load_h), xytext=(8, 8), textcoords="offset points",
         fontsize=9, color=color, fontweight="bold",
     )
-
-    # Reference guide lines to the axes.
     ax.plot([radius, radius], [0, load_h], color=color, linewidth=0.8, linestyle="--", alpha=0.5)
     ax.plot([0, radius], [load_h, load_h], color=color, linewidth=0.8, linestyle="--", alpha=0.5)
 
     verdict = "SUITABLE" if result.suitable else "NOT SUITABLE"
     util = f"  ({result.utilization_pct:.0f}%)" if result.utilization_pct is not None else ""
-    ax.set_title(f"Duty point — side view  ·  {verdict}{util}", fontsize=11, color=color,
-                 fontweight="bold")
-    ax.set_xlabel("Horizontal radius (m)")
-    ax.set_ylabel("Height (m)")
+    ax.set_title(f"Working-range diagram — duty point  ·  {verdict}{util}",
+                 fontsize=12, color=color, fontweight="bold")
+    ax.set_xlabel("Working radius (m)")
+    ax.set_ylabel("Hook height (m)")
     ax.grid(True, linestyle=":", alpha=0.5)
-    ax.set_xlim(left=-2.0, right=max(radius, 1.0) * 1.25 + 2)
-    ax.set_ylim(bottom=0, top=max(tip_h, load_h, PIVOT_HEIGHT_M) * 1.2 + 1)
+    ax.set_xlim(left=0, right=max_r * 1.1 + 2)
+    ax.set_ylim(bottom=0, top=max_h * 1.1 + 2)
     ax.set_aspect("equal", adjustable="box")
-    ax.legend(loc="upper right", fontsize=8, framealpha=0.9)
+    ax.legend(loc="upper right", fontsize=9, framealpha=0.9)
     fig.tight_layout()
     return fig
