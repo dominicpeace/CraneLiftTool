@@ -1,0 +1,44 @@
+{
+  "manufacturer": "Grove",
+  "model": "RT870",
+  "type": "Rough Terrain",
+  "max_capacity_t": 63.0,
+  "max_boom_m": 38.0,
+  "counterweight": "Full counterweight, fully extended outriggers (as-charted)",
+  "source_pdf": "Grove-RT870.pdf",
+  "notes": "Verify against manufacturer chart before use.",
+  "data_status": "REPRESENTATIVE — approximate figures, not yet verified against source PDF",
+  "boom_configs": [
+    {
+      "boom_length_m": 10.5,
+      "max_tip_height_m": 11.5,
+      "points": [
+        { "radius_m": 3.0, "capacity_t": 63.0 },
+        { "radius_m": 4.5, "capacity_t": 50.0 },
+        { "radius_m": 6.0, "capacity_t": 38.0 },
+        { "radius_m": 9.0, "capacity_t": 23.0 },
+        { "radius_m": 10.5, "capacity_t": 18.0 }
+      ]
+    },
+    {
+      "boom_length_m": 23.0,
+      "max_tip_height_m": 24.0,
+      "points": [
+        { "radius_m": 6.0, "capacity_t": 28.0 },
+        { "radius_m": 9.0, "capacity_t": 20.0 },
+        { "radius_m": 12.0, "capacity_t": 15.0 },
+        { "radius_m": 18.0, "capacity_t": 8.3 }
+      ]
+    },
+    {
+      "boom_length_m": 38.0,
+      "max_tip_height_m": 38.0,
+      "points": [
+        { "radius_m": 12.0, "capacity_t": 9.0 },
+        { "radius_m": 18.0, "capacity_t": 5.8 },
+        { "radius_m": 26.0, "capacity_t": 3.5 },
+        { "radius_m": 34.0, "capacity_t": 2.1 }
+      ]
+    }
+  ]
+}

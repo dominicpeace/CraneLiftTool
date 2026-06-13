@@ -1,0 +1,44 @@
+{
+  "manufacturer": "Grove",
+  "model": "RT880E",
+  "type": "Rough Terrain",
+  "max_capacity_t": 73.0,
+  "max_boom_m": 39.0,
+  "counterweight": "Full counterweight, fully extended outriggers (as-charted)",
+  "source_pdf": "Grove-RT880E-Prdouct-Guide-imperial.pdf",
+  "notes": "Verify against manufacturer chart before use.",
+  "data_status": "REPRESENTATIVE — approximate figures, not yet verified against source PDF",
+  "boom_configs": [
+    {
+      "boom_length_m": 11.0,
+      "max_tip_height_m": 12.0,
+      "points": [
+        { "radius_m": 3.0, "capacity_t": 73.0 },
+        { "radius_m": 4.5, "capacity_t": 58.0 },
+        { "radius_m": 6.0, "capacity_t": 44.0 },
+        { "radius_m": 9.0, "capacity_t": 27.0 },
+        { "radius_m": 11.0, "capacity_t": 21.0 }
+      ]
+    },
+    {
+      "boom_length_m": 24.0,
+      "max_tip_height_m": 25.0,
+      "points": [
+        { "radius_m": 6.0, "capacity_t": 32.0 },
+        { "radius_m": 9.0, "capacity_t": 24.0 },
+        { "radius_m": 12.0, "capacity_t": 17.0 },
+        { "radius_m": 18.0, "capacity_t": 9.8 }
+      ]
+    },
+    {
+      "boom_length_m": 39.0,
+      "max_tip_height_m": 39.0,
+      "points": [
+        { "radius_m": 12.0, "capacity_t": 11.0 },
+        { "radius_m": 18.0, "capacity_t": 7.0 },
+        { "radius_m": 26.0, "capacity_t": 4.3 },
+        { "radius_m": 34.0, "capacity_t": 2.7 }
+      ]
+    }
+  ]
+}

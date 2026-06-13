@@ -1,0 +1,44 @@
+{
+  "manufacturer": "Grove",
+  "model": "RT9100",
+  "type": "Rough Terrain",
+  "max_capacity_t": 91.0,
+  "max_boom_m": 35.0,
+  "counterweight": "Full counterweight, fully extended outriggers (as-charted)",
+  "source_pdf": "Grove-RT9100A.pdf",
+  "notes": "Verify against manufacturer chart before use.",
+  "data_status": "REPRESENTATIVE — approximate figures, not yet verified against source PDF",
+  "boom_configs": [
+    {
+      "boom_length_m": 11.0,
+      "max_tip_height_m": 12.0,
+      "points": [
+        { "radius_m": 3.0, "capacity_t": 91.0 },
+        { "radius_m": 4.5, "capacity_t": 72.0 },
+        { "radius_m": 6.0, "capacity_t": 54.0 },
+        { "radius_m": 9.0, "capacity_t": 34.0 },
+        { "radius_m": 11.0, "capacity_t": 26.0 }
+      ]
+    },
+    {
+      "boom_length_m": 23.0,
+      "max_tip_height_m": 24.0,
+      "points": [
+        { "radius_m": 6.0, "capacity_t": 40.0 },
+        { "radius_m": 9.0, "capacity_t": 29.0 },
+        { "radius_m": 12.0, "capacity_t": 21.0 },
+        { "radius_m": 18.0, "capacity_t": 12.0 }
+      ]
+    },
+    {
+      "boom_length_m": 35.0,
+      "max_tip_height_m": 35.0,
+      "points": [
+        { "radius_m": 10.0, "capacity_t": 18.0 },
+        { "radius_m": 14.0, "capacity_t": 12.0 },
+        { "radius_m": 20.0, "capacity_t": 8.0 },
+        { "radius_m": 26.0, "capacity_t": 5.2 }
+      ]
+    }
+  ]
+}

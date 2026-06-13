@@ -1,0 +1,57 @@
+{
+  "manufacturer": "Grove",
+  "model": "RT9150E",
+  "type": "Rough Terrain",
+  "max_capacity_t": 136.0,
+  "max_boom_m": 60.0,
+  "counterweight": "Full counterweight, fully extended outriggers (as-charted)",
+  "source_pdf": "Grove-RT9150E-Product-Guide.pdf",
+  "notes": "Over-rear / 360 deg as charted. Verify against manufacturer chart before use.",
+  "data_status": "REPRESENTATIVE — approximate figures, not yet verified against source PDF",
+  "boom_configs": [
+    {
+      "boom_length_m": 12.8,
+      "max_tip_height_m": 14.0,
+      "points": [
+        { "radius_m": 3.0, "capacity_t": 136.0 },
+        { "radius_m": 4.5, "capacity_t": 110.0 },
+        { "radius_m": 6.0, "capacity_t": 82.0 },
+        { "radius_m": 9.0, "capacity_t": 52.0 },
+        { "radius_m": 12.0, "capacity_t": 34.0 }
+      ]
+    },
+    {
+      "boom_length_m": 30.0,
+      "max_tip_height_m": 31.0,
+      "points": [
+        { "radius_m": 6.0, "capacity_t": 60.0 },
+        { "radius_m": 9.0, "capacity_t": 44.0 },
+        { "radius_m": 12.0, "capacity_t": 32.0 },
+        { "radius_m": 18.0, "capacity_t": 19.0 },
+        { "radius_m": 24.0, "capacity_t": 12.0 }
+      ]
+    },
+    {
+      "boom_length_m": 47.0,
+      "max_tip_height_m": 48.0,
+      "points": [
+        { "radius_m": 10.0, "capacity_t": 26.0 },
+        { "radius_m": 14.0, "capacity_t": 18.0 },
+        { "radius_m": 20.0, "capacity_t": 12.0 },
+        { "radius_m": 28.0, "capacity_t": 7.5 },
+        { "radius_m": 36.0, "capacity_t": 4.8 }
+      ]
+    },
+    {
+      "boom_length_m": 60.0,
+      "max_tip_height_m": 60.0,
+      "points": [
+        { "radius_m": 14.0, "capacity_t": 13.0 },
+        { "radius_m": 20.0, "capacity_t": 9.0 },
+        { "radius_m": 28.0, "capacity_t": 5.8 },
+        { "radius_m": 40.0, "capacity_t": 3.4 },
+        { "radius_m": 50.0, "capacity_t": 2.2 }
+      ]
+    }
+  ]
+}

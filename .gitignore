@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+env/
+
+# Downloaded source PDFs (large, regenerable via ingest/download_pdfs.py)
+data/pdfs/
+*.pdf
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
