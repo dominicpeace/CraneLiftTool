@@ -164,11 +164,18 @@ def plot_duty_point(result: LiftResult, req: LiftRequest) -> Figure:
     ax.plot([radius, radius], [tip_h, load_h], color="#666666", linewidth=1.0, linestyle=":",
             zorder=5)
 
-    # Duty point.
+    # Duty point — show the load AND the crane's rated capacity at this radius/height.
+    if result.capacity_t is not None:
+        cap_txt = f"capacity {result.capacity_t:.1f} t"
+        if result.utilization_pct is not None:
+            cap_txt += f" ({result.utilization_pct:.0f}% used)"
+    else:
+        cap_txt = "out of chart"
+    boom_txt = f", boom {result.boom_length_m:.0f} m" if result.boom_length_m else ""
     ax.scatter([radius], [load_h], s=170, color=color, edgecolors="black", linewidths=1.2,
                zorder=6, label=f"duty point: {req.load_t:.1f} t @ {radius:.1f} m")
     ax.annotate(
-        f"{req.load_t:.1f} t\nR={radius:.1f} m, h={load_h:.1f} m",
+        f"load {req.load_t:.1f} t  ·  {cap_txt}\nR={radius:.1f} m, h={load_h:.1f} m{boom_txt}",
         xy=(radius, load_h), xytext=(8, 8), textcoords="offset points",
         fontsize=9, color=color, fontweight="bold",
     )
