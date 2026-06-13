@@ -1,0 +1,1211 @@
+{
+  "manufacturer": "Grove",
+  "model": "GMK4100L-2",
+  "type": "All Terrain",
+  "max_capacity_t": 84.0,
+  "max_boom_m": 60.0,
+  "counterweight": "26,0 t counterweight, 360 deg (as charted)",
+  "source_pdf": "GMK4100L-2-metric.pdf",
+  "notes": "Metric telescopic-boom chart, page 16. Tip heights APPROXIMATE (no boom-angle data in metric charts).",
+  "data_status": "EXTRACTED from metric source PDF via pdfplumber (capacities in tonnes from chart; upward-misread points dropped; tip heights approximate). Spot-check advised.",
+  "boom_configs": [
+    {
+      "boom_length_m": 11.3,
+      "max_tip_height_m": 14.1,
+      "points": [
+        {
+          "radius_m": 2.5,
+          "capacity_t": 84.0
+        },
+        {
+          "radius_m": 4.0,
+          "capacity_t": 64.0
+        },
+        {
+          "radius_m": 5.0,
+          "capacity_t": 55.0
+        },
+        {
+          "radius_m": 6.0,
+          "capacity_t": 47.5
+        },
+        {
+          "radius_m": 7.0,
+          "capacity_t": 42.0
+        },
+        {
+          "radius_m": 8.0,
+          "capacity_t": 37.5
+        },
+        {
+          "radius_m": 9.0,
+          "capacity_t": 31.0
+        }
+      ]
+    },
+    {
+      "boom_length_m": 15.5,
+      "max_tip_height_m": 18.2,
+      "points": [
+        {
+          "radius_m": 3.0,
+          "capacity_t": 76.5
+        },
+        {
+          "radius_m": 4.0,
+          "capacity_t": 64.5
+        },
+        {
+          "radius_m": 5.0,
+          "capacity_t": 55.0
+        },
+        {
+          "radius_m": 6.0,
+          "capacity_t": 48.0
+        },
+        {
+          "radius_m": 7.0,
+          "capacity_t": 43.0
+        },
+        {
+          "radius_m": 8.0,
+          "capacity_t": 38.5
+        },
+        {
+          "radius_m": 9.0,
+          "capacity_t": 34.0
+        },
+        {
+          "radius_m": 10.0,
+          "capacity_t": 30.0
+        },
+        {
+          "radius_m": 11.0,
+          "capacity_t": 27.0
+        },
+        {
+          "radius_m": 12.0,
+          "capacity_t": 24.0
+        },
+        {
+          "radius_m": 13.0,
+          "capacity_t": 21.5
+        }
+      ]
+    },
+    {
+      "boom_length_m": 19.6,
+      "max_tip_height_m": 22.2,
+      "points": [
+        {
+          "radius_m": 3.0,
+          "capacity_t": 75.5
+        },
+        {
+          "radius_m": 4.0,
+          "capacity_t": 63.5
+        },
+        {
+          "radius_m": 5.0,
+          "capacity_t": 55.0
+        },
+        {
+          "radius_m": 6.0,
+          "capacity_t": 48.0
+        },
+        {
+          "radius_m": 7.0,
+          "capacity_t": 42.5
+        },
+        {
+          "radius_m": 8.0,
+          "capacity_t": 38.0
+        },
+        {
+          "radius_m": 9.0,
+          "capacity_t": 33.5
+        },
+        {
+          "radius_m": 10.0,
+          "capacity_t": 29.5
+        },
+        {
+          "radius_m": 11.0,
+          "capacity_t": 26.5
+        },
+        {
+          "radius_m": 12.0,
+          "capacity_t": 24.5
+        },
+        {
+          "radius_m": 13.0,
+          "capacity_t": 22.0
+        },
+        {
+          "radius_m": 14.0,
+          "capacity_t": 19.4
+        },
+        {
+          "radius_m": 15.0,
+          "capacity_t": 17.2
+        },
+        {
+          "radius_m": 16.0,
+          "capacity_t": 15.9
+        }
+      ]
+    },
+    {
+      "boom_length_m": 23.7,
+      "max_tip_height_m": 26.2,
+      "points": [
+        {
+          "radius_m": 4.0,
+          "capacity_t": 62.5
+        },
+        {
+          "radius_m": 5.0,
+          "capacity_t": 55.0
+        },
+        {
+          "radius_m": 6.0,
+          "capacity_t": 48.0
+        },
+        {
+          "radius_m": 7.0,
+          "capacity_t": 42.0
+        },
+        {
+          "radius_m": 8.0,
+          "capacity_t": 37.5
+        },
+        {
+          "radius_m": 9.0,
+          "capacity_t": 33.0
+        },
+        {
+          "radius_m": 10.0,
+          "capacity_t": 29.5
+        },
+        {
+          "radius_m": 11.0,
+          "capacity_t": 27.0
+        },
+        {
+          "radius_m": 12.0,
+          "capacity_t": 24.5
+        },
+        {
+          "radius_m": 13.0,
+          "capacity_t": 22.0
+        },
+        {
+          "radius_m": 14.0,
+          "capacity_t": 19.2
+        },
+        {
+          "radius_m": 15.0,
+          "capacity_t": 17.2
+        },
+        {
+          "radius_m": 16.0,
+          "capacity_t": 16.1
+        },
+        {
+          "radius_m": 18.0,
+          "capacity_t": 13.2
+        },
+        {
+          "radius_m": 20.0,
+          "capacity_t": 11.0
+        }
+      ]
+    },
+    {
+      "boom_length_m": 27.8,
+      "max_tip_height_m": 30.2,
+      "points": [
+        {
+          "radius_m": 5.0,
+          "capacity_t": 48.0
+        },
+        {
+          "radius_m": 6.0,
+          "capacity_t": 45.5
+        },
+        {
+          "radius_m": 7.0,
+          "capacity_t": 42.0
+        },
+        {
+          "radius_m": 8.0,
+          "capacity_t": 38.0
+        },
+        {
+          "radius_m": 9.0,
+          "capacity_t": 33.5
+        },
+        {
+          "radius_m": 10.0,
+          "capacity_t": 30.0
+        },
+        {
+          "radius_m": 11.0,
+          "capacity_t": 26.5
+        },
+        {
+          "radius_m": 12.0,
+          "capacity_t": 23.5
+        },
+        {
+          "radius_m": 13.0,
+          "capacity_t": 21.5
+        },
+        {
+          "radius_m": 14.0,
+          "capacity_t": 19.9
+        },
+        {
+          "radius_m": 15.0,
+          "capacity_t": 17.7
+        },
+        {
+          "radius_m": 16.0,
+          "capacity_t": 15.9
+        },
+        {
+          "radius_m": 18.0,
+          "capacity_t": 12.9
+        },
+        {
+          "radius_m": 20.0,
+          "capacity_t": 10.7
+        },
+        {
+          "radius_m": 22.0,
+          "capacity_t": 9.0
+        },
+        {
+          "radius_m": 24.0,
+          "capacity_t": 7.9
+        }
+      ]
+    },
+    {
+      "boom_length_m": 31.8,
+      "max_tip_height_m": 34.1,
+      "points": [
+        {
+          "radius_m": 5.0,
+          "capacity_t": 37.5
+        },
+        {
+          "radius_m": 6.0,
+          "capacity_t": 37.5
+        },
+        {
+          "radius_m": 7.0,
+          "capacity_t": 36.0
+        },
+        {
+          "radius_m": 8.0,
+          "capacity_t": 33.5
+        },
+        {
+          "radius_m": 9.0,
+          "capacity_t": 31.5
+        },
+        {
+          "radius_m": 10.0,
+          "capacity_t": 29.5
+        },
+        {
+          "radius_m": 11.0,
+          "capacity_t": 26.0
+        },
+        {
+          "radius_m": 12.0,
+          "capacity_t": 23.5
+        },
+        {
+          "radius_m": 13.0,
+          "capacity_t": 21.0
+        },
+        {
+          "radius_m": 14.0,
+          "capacity_t": 18.7
+        },
+        {
+          "radius_m": 15.0,
+          "capacity_t": 17.6
+        },
+        {
+          "radius_m": 16.0,
+          "capacity_t": 16.6
+        },
+        {
+          "radius_m": 18.0,
+          "capacity_t": 13.6
+        },
+        {
+          "radius_m": 20.0,
+          "capacity_t": 11.3
+        },
+        {
+          "radius_m": 22.0,
+          "capacity_t": 9.6
+        },
+        {
+          "radius_m": 24.0,
+          "capacity_t": 8.8
+        },
+        {
+          "radius_m": 26.0,
+          "capacity_t": 7.7
+        },
+        {
+          "radius_m": 28.0,
+          "capacity_t": 6.8
+        },
+        {
+          "radius_m": 30.0,
+          "capacity_t": 4.6
+        }
+      ]
+    },
+    {
+      "boom_length_m": 35.7,
+      "max_tip_height_m": 37.9,
+      "points": [
+        {
+          "radius_m": 6.0,
+          "capacity_t": 31.0
+        },
+        {
+          "radius_m": 7.0,
+          "capacity_t": 31.0
+        },
+        {
+          "radius_m": 8.0,
+          "capacity_t": 30.0
+        },
+        {
+          "radius_m": 9.0,
+          "capacity_t": 28.5
+        },
+        {
+          "radius_m": 10.0,
+          "capacity_t": 27.0
+        },
+        {
+          "radius_m": 11.0,
+          "capacity_t": 25.5
+        },
+        {
+          "radius_m": 12.0,
+          "capacity_t": 23.0
+        },
+        {
+          "radius_m": 13.0,
+          "capacity_t": 21.0
+        },
+        {
+          "radius_m": 14.0,
+          "capacity_t": 18.8
+        },
+        {
+          "radius_m": 15.0,
+          "capacity_t": 17.1
+        },
+        {
+          "radius_m": 16.0,
+          "capacity_t": 15.6
+        },
+        {
+          "radius_m": 18.0,
+          "capacity_t": 13.1
+        },
+        {
+          "radius_m": 20.0,
+          "capacity_t": 11.2
+        },
+        {
+          "radius_m": 22.0,
+          "capacity_t": 10.0
+        },
+        {
+          "radius_m": 24.0,
+          "capacity_t": 8.6
+        },
+        {
+          "radius_m": 26.0,
+          "capacity_t": 7.4
+        },
+        {
+          "radius_m": 28.0,
+          "capacity_t": 6.5
+        },
+        {
+          "radius_m": 30.0,
+          "capacity_t": 5.6
+        },
+        {
+          "radius_m": 32.0,
+          "capacity_t": 5.0
+        }
+      ]
+    },
+    {
+      "boom_length_m": 39.1,
+      "max_tip_height_m": 41.2,
+      "points": [
+        {
+          "radius_m": 7.0,
+          "capacity_t": 24.5
+        },
+        {
+          "radius_m": 8.0,
+          "capacity_t": 24.5
+        },
+        {
+          "radius_m": 9.0,
+          "capacity_t": 24.0
+        },
+        {
+          "radius_m": 10.0,
+          "capacity_t": 22.5
+        },
+        {
+          "radius_m": 11.0,
+          "capacity_t": 21.5
+        },
+        {
+          "radius_m": 12.0,
+          "capacity_t": 19.8
+        },
+        {
+          "radius_m": 13.0,
+          "capacity_t": 18.6
+        },
+        {
+          "radius_m": 14.0,
+          "capacity_t": 17.5
+        },
+        {
+          "radius_m": 15.0,
+          "capacity_t": 16.2
+        },
+        {
+          "radius_m": 16.0,
+          "capacity_t": 14.8
+        },
+        {
+          "radius_m": 18.0,
+          "capacity_t": 12.4
+        },
+        {
+          "radius_m": 20.0,
+          "capacity_t": 10.5
+        },
+        {
+          "radius_m": 22.0,
+          "capacity_t": 8.7
+        },
+        {
+          "radius_m": 24.0,
+          "capacity_t": 7.3
+        },
+        {
+          "radius_m": 26.0,
+          "capacity_t": 6.2
+        },
+        {
+          "radius_m": 28.0,
+          "capacity_t": 5.6
+        },
+        {
+          "radius_m": 30.0,
+          "capacity_t": 5.2
+        },
+        {
+          "radius_m": 32.0,
+          "capacity_t": 4.8
+        },
+        {
+          "radius_m": 34.0,
+          "capacity_t": 4.6
+        },
+        {
+          "radius_m": 36.0,
+          "capacity_t": 3.9
+        },
+        {
+          "radius_m": 38.0,
+          "capacity_t": 3.7
+        }
+      ]
+    },
+    {
+      "boom_length_m": 42.6,
+      "max_tip_height_m": 44.7,
+      "points": [
+        {
+          "radius_m": 8.0,
+          "capacity_t": 20.0
+        },
+        {
+          "radius_m": 9.0,
+          "capacity_t": 20.0
+        },
+        {
+          "radius_m": 10.0,
+          "capacity_t": 20.0
+        },
+        {
+          "radius_m": 11.0,
+          "capacity_t": 19.3
+        },
+        {
+          "radius_m": 12.0,
+          "capacity_t": 18.3
+        },
+        {
+          "radius_m": 13.0,
+          "capacity_t": 17.3
+        },
+        {
+          "radius_m": 14.0,
+          "capacity_t": 16.3
+        },
+        {
+          "radius_m": 15.0,
+          "capacity_t": 15.4
+        },
+        {
+          "radius_m": 16.0,
+          "capacity_t": 14.4
+        },
+        {
+          "radius_m": 18.0,
+          "capacity_t": 12.0
+        },
+        {
+          "radius_m": 20.0,
+          "capacity_t": 10.2
+        },
+        {
+          "radius_m": 22.0,
+          "capacity_t": 8.7
+        },
+        {
+          "radius_m": 24.0,
+          "capacity_t": 7.3
+        },
+        {
+          "radius_m": 26.0,
+          "capacity_t": 6.2
+        },
+        {
+          "radius_m": 28.0,
+          "capacity_t": 5.2
+        },
+        {
+          "radius_m": 30.0,
+          "capacity_t": 4.6
+        },
+        {
+          "radius_m": 32.0,
+          "capacity_t": 4.3
+        },
+        {
+          "radius_m": 34.0,
+          "capacity_t": 3.9
+        },
+        {
+          "radius_m": 36.0,
+          "capacity_t": 3.6
+        },
+        {
+          "radius_m": 38.0,
+          "capacity_t": 3.4
+        },
+        {
+          "radius_m": 40.0,
+          "capacity_t": 3.1
+        },
+        {
+          "radius_m": 42.0,
+          "capacity_t": 2.9
+        }
+      ]
+    },
+    {
+      "boom_length_m": 45.8,
+      "max_tip_height_m": 47.8,
+      "points": [
+        {
+          "radius_m": 9.0,
+          "capacity_t": 17.4
+        },
+        {
+          "radius_m": 10.0,
+          "capacity_t": 17.4
+        },
+        {
+          "radius_m": 11.0,
+          "capacity_t": 17.3
+        },
+        {
+          "radius_m": 12.0,
+          "capacity_t": 16.8
+        },
+        {
+          "radius_m": 13.0,
+          "capacity_t": 16.2
+        },
+        {
+          "radius_m": 14.0,
+          "capacity_t": 15.4
+        },
+        {
+          "radius_m": 15.0,
+          "capacity_t": 14.7
+        },
+        {
+          "radius_m": 16.0,
+          "capacity_t": 14.0
+        },
+        {
+          "radius_m": 18.0,
+          "capacity_t": 12.2
+        },
+        {
+          "radius_m": 20.0,
+          "capacity_t": 10.4
+        },
+        {
+          "radius_m": 22.0,
+          "capacity_t": 8.9
+        },
+        {
+          "radius_m": 24.0,
+          "capacity_t": 7.9
+        },
+        {
+          "radius_m": 26.0,
+          "capacity_t": 7.3
+        },
+        {
+          "radius_m": 28.0,
+          "capacity_t": 6.4
+        },
+        {
+          "radius_m": 30.0,
+          "capacity_t": 5.5
+        },
+        {
+          "radius_m": 32.0,
+          "capacity_t": 4.8
+        },
+        {
+          "radius_m": 34.0,
+          "capacity_t": 4.2
+        },
+        {
+          "radius_m": 36.0,
+          "capacity_t": 3.7
+        },
+        {
+          "radius_m": 38.0,
+          "capacity_t": 3.2
+        },
+        {
+          "radius_m": 40.0,
+          "capacity_t": 2.8
+        },
+        {
+          "radius_m": 42.0,
+          "capacity_t": 2.4
+        }
+      ]
+    },
+    {
+      "boom_length_m": 49.5,
+      "max_tip_height_m": 51.4,
+      "points": [
+        {
+          "radius_m": 10.0,
+          "capacity_t": 13.8
+        },
+        {
+          "radius_m": 11.0,
+          "capacity_t": 13.8
+        },
+        {
+          "radius_m": 12.0,
+          "capacity_t": 13.8
+        },
+        {
+          "radius_m": 13.0,
+          "capacity_t": 13.8
+        },
+        {
+          "radius_m": 14.0,
+          "capacity_t": 13.5
+        },
+        {
+          "radius_m": 15.0,
+          "capacity_t": 12.9
+        },
+        {
+          "radius_m": 16.0,
+          "capacity_t": 12.4
+        },
+        {
+          "radius_m": 18.0,
+          "capacity_t": 11.3
+        },
+        {
+          "radius_m": 20.0,
+          "capacity_t": 10.1
+        },
+        {
+          "radius_m": 22.0,
+          "capacity_t": 8.6
+        },
+        {
+          "radius_m": 24.0,
+          "capacity_t": 7.4
+        },
+        {
+          "radius_m": 26.0,
+          "capacity_t": 6.5
+        },
+        {
+          "radius_m": 28.0,
+          "capacity_t": 5.9
+        },
+        {
+          "radius_m": 30.0,
+          "capacity_t": 5.5
+        },
+        {
+          "radius_m": 32.0,
+          "capacity_t": 5.0
+        },
+        {
+          "radius_m": 34.0,
+          "capacity_t": 4.4
+        },
+        {
+          "radius_m": 36.0,
+          "capacity_t": 3.8
+        },
+        {
+          "radius_m": 38.0,
+          "capacity_t": 3.5
+        },
+        {
+          "radius_m": 40.0,
+          "capacity_t": 3.2
+        },
+        {
+          "radius_m": 42.0,
+          "capacity_t": 2.9
+        },
+        {
+          "radius_m": 44.0,
+          "capacity_t": 2.5
+        },
+        {
+          "radius_m": 46.0,
+          "capacity_t": 1.9
+        }
+      ]
+    },
+    {
+      "boom_length_m": 52.9,
+      "max_tip_height_m": 54.7,
+      "points": [
+        {
+          "radius_m": 11.0,
+          "capacity_t": 11.6
+        },
+        {
+          "radius_m": 12.0,
+          "capacity_t": 11.6
+        },
+        {
+          "radius_m": 13.0,
+          "capacity_t": 11.6
+        },
+        {
+          "radius_m": 14.0,
+          "capacity_t": 11.6
+        },
+        {
+          "radius_m": 15.0,
+          "capacity_t": 11.6
+        },
+        {
+          "radius_m": 16.0,
+          "capacity_t": 11.5
+        },
+        {
+          "radius_m": 18.0,
+          "capacity_t": 10.6
+        },
+        {
+          "radius_m": 20.0,
+          "capacity_t": 9.8
+        },
+        {
+          "radius_m": 22.0,
+          "capacity_t": 8.7
+        },
+        {
+          "radius_m": 24.0,
+          "capacity_t": 7.7
+        },
+        {
+          "radius_m": 26.0,
+          "capacity_t": 7.1
+        },
+        {
+          "radius_m": 28.0,
+          "capacity_t": 6.2
+        },
+        {
+          "radius_m": 30.0,
+          "capacity_t": 5.4
+        },
+        {
+          "radius_m": 32.0,
+          "capacity_t": 4.7
+        },
+        {
+          "radius_m": 34.0,
+          "capacity_t": 4.1
+        },
+        {
+          "radius_m": 36.0,
+          "capacity_t": 3.6
+        },
+        {
+          "radius_m": 38.0,
+          "capacity_t": 3.2
+        },
+        {
+          "radius_m": 40.0,
+          "capacity_t": 2.9
+        },
+        {
+          "radius_m": 42.0,
+          "capacity_t": 2.6
+        },
+        {
+          "radius_m": 44.0,
+          "capacity_t": 2.2
+        },
+        {
+          "radius_m": 46.0,
+          "capacity_t": 1.9
+        },
+        {
+          "radius_m": 48.0,
+          "capacity_t": 1.7
+        },
+        {
+          "radius_m": 50.0,
+          "capacity_t": 1.1
+        }
+      ]
+    },
+    {
+      "boom_length_m": 56.1,
+      "max_tip_height_m": 57.9,
+      "points": [
+        {
+          "radius_m": 11.0,
+          "capacity_t": 9.9
+        },
+        {
+          "radius_m": 12.0,
+          "capacity_t": 9.9
+        },
+        {
+          "radius_m": 13.0,
+          "capacity_t": 9.9
+        },
+        {
+          "radius_m": 14.0,
+          "capacity_t": 9.9
+        },
+        {
+          "radius_m": 15.0,
+          "capacity_t": 9.9
+        },
+        {
+          "radius_m": 16.0,
+          "capacity_t": 9.9
+        },
+        {
+          "radius_m": 18.0,
+          "capacity_t": 9.9
+        },
+        {
+          "radius_m": 20.0,
+          "capacity_t": 9.3
+        },
+        {
+          "radius_m": 22.0,
+          "capacity_t": 8.7
+        },
+        {
+          "radius_m": 24.0,
+          "capacity_t": 7.7
+        },
+        {
+          "radius_m": 26.0,
+          "capacity_t": 6.7
+        },
+        {
+          "radius_m": 28.0,
+          "capacity_t": 5.9
+        },
+        {
+          "radius_m": 30.0,
+          "capacity_t": 5.1
+        },
+        {
+          "radius_m": 32.0,
+          "capacity_t": 4.5
+        },
+        {
+          "radius_m": 34.0,
+          "capacity_t": 4.2
+        },
+        {
+          "radius_m": 36.0,
+          "capacity_t": 3.6
+        },
+        {
+          "radius_m": 38.0,
+          "capacity_t": 3.1
+        },
+        {
+          "radius_m": 40.0,
+          "capacity_t": 2.7
+        },
+        {
+          "radius_m": 42.0,
+          "capacity_t": 2.3
+        },
+        {
+          "radius_m": 44.0,
+          "capacity_t": 2.0
+        },
+        {
+          "radius_m": 46.0,
+          "capacity_t": 1.7
+        },
+        {
+          "radius_m": 48.0,
+          "capacity_t": 1.4
+        },
+        {
+          "radius_m": 50.0,
+          "capacity_t": 1.2
+        },
+        {
+          "radius_m": 52.0,
+          "capacity_t": 0.9
+        }
+      ]
+    },
+    {
+      "boom_length_m": 58.0,
+      "max_tip_height_m": 59.7,
+      "points": [
+        {
+          "radius_m": 12.0,
+          "capacity_t": 8.6
+        },
+        {
+          "radius_m": 13.0,
+          "capacity_t": 8.6
+        },
+        {
+          "radius_m": 14.0,
+          "capacity_t": 8.6
+        },
+        {
+          "radius_m": 15.0,
+          "capacity_t": 8.6
+        },
+        {
+          "radius_m": 16.0,
+          "capacity_t": 8.6
+        },
+        {
+          "radius_m": 18.0,
+          "capacity_t": 8.5
+        },
+        {
+          "radius_m": 20.0,
+          "capacity_t": 8.3
+        },
+        {
+          "radius_m": 22.0,
+          "capacity_t": 8.0
+        },
+        {
+          "radius_m": 24.0,
+          "capacity_t": 7.5
+        },
+        {
+          "radius_m": 26.0,
+          "capacity_t": 6.7
+        },
+        {
+          "radius_m": 28.0,
+          "capacity_t": 5.9
+        },
+        {
+          "radius_m": 30.0,
+          "capacity_t": 5.2
+        },
+        {
+          "radius_m": 32.0,
+          "capacity_t": 4.5
+        },
+        {
+          "radius_m": 34.0,
+          "capacity_t": 3.9
+        },
+        {
+          "radius_m": 36.0,
+          "capacity_t": 3.4
+        },
+        {
+          "radius_m": 38.0,
+          "capacity_t": 2.9
+        },
+        {
+          "radius_m": 40.0,
+          "capacity_t": 2.5
+        },
+        {
+          "radius_m": 42.0,
+          "capacity_t": 2.1
+        },
+        {
+          "radius_m": 44.0,
+          "capacity_t": 1.7
+        },
+        {
+          "radius_m": 46.0,
+          "capacity_t": 1.4
+        },
+        {
+          "radius_m": 48.0,
+          "capacity_t": 1.1
+        },
+        {
+          "radius_m": 50.0,
+          "capacity_t": 0.9
+        }
+      ]
+    },
+    {
+      "boom_length_m": 60.0,
+      "max_tip_height_m": 61.7,
+      "points": [
+        {
+          "radius_m": 12.0,
+          "capacity_t": 8.1
+        },
+        {
+          "radius_m": 13.0,
+          "capacity_t": 8.1
+        },
+        {
+          "radius_m": 14.0,
+          "capacity_t": 8.1
+        },
+        {
+          "radius_m": 15.0,
+          "capacity_t": 8.1
+        },
+        {
+          "radius_m": 16.0,
+          "capacity_t": 8.0
+        },
+        {
+          "radius_m": 18.0,
+          "capacity_t": 7.9
+        },
+        {
+          "radius_m": 20.0,
+          "capacity_t": 7.7
+        },
+        {
+          "radius_m": 22.0,
+          "capacity_t": 7.3
+        },
+        {
+          "radius_m": 24.0,
+          "capacity_t": 6.6
+        },
+        {
+          "radius_m": 26.0,
+          "capacity_t": 6.1
+        },
+        {
+          "radius_m": 28.0,
+          "capacity_t": 5.6
+        },
+        {
+          "radius_m": 30.0,
+          "capacity_t": 5.0
+        },
+        {
+          "radius_m": 32.0,
+          "capacity_t": 4.4
+        },
+        {
+          "radius_m": 34.0,
+          "capacity_t": 3.8
+        },
+        {
+          "radius_m": 36.0,
+          "capacity_t": 3.3
+        },
+        {
+          "radius_m": 38.0,
+          "capacity_t": 2.8
+        },
+        {
+          "radius_m": 40.0,
+          "capacity_t": 2.4
+        },
+        {
+          "radius_m": 42.0,
+          "capacity_t": 2.0
+        },
+        {
+          "radius_m": 44.0,
+          "capacity_t": 1.7
+        },
+        {
+          "radius_m": 46.0,
+          "capacity_t": 1.4
+        },
+        {
+          "radius_m": 48.0,
+          "capacity_t": 1.1
+        }
+      ]
+    }
+  ]
+}

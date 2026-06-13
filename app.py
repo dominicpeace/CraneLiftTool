@@ -44,7 +44,7 @@ def main() -> None:
     )
 
     try:
-        cranes = _load()
+        full_library = _load()
     except CraneDataError as exc:
         st.error(f"Could not load crane library: {exc}")
         return
@@ -63,6 +63,17 @@ def main() -> None:
             step=0.5,
             help="Added to vertical lift for hook-block / clearance to set the required tip height.",
         )
+        st.divider()
+        all_types = sorted({c.type for c in full_library})
+        chosen_types = st.multiselect(
+            "Crane types to consider",
+            all_types,
+            default=all_types,
+            help="Filter the library, e.g. Rough Terrain vs All Terrain.",
+        )
+
+    cranes = [c for c in full_library if c.type in chosen_types] or full_library
+    st.caption(f"Considering **{len(cranes)}** crane(s) of {len(full_library)} in the library.")
 
     req = LiftRequest(
         x_reach_m=x, y_reach_m=y, vertical_lift_m=lift, load_t=load, headroom_m=headroom
@@ -130,6 +141,7 @@ def main() -> None:
         rows.append(
             {
                 "Crane": r.crane.name,
+                "Type": r.crane.type,
                 "Max capacity (t)": r.crane.max_capacity_t,
                 "Capacity @ radius (t)": None if r.capacity_t is None else round(r.capacity_t, 1),
                 "Utilization (%)": None

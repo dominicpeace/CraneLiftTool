@@ -56,6 +56,13 @@ provenance:
 | RT875E | scanned PDF (image) | transcribed by hand from a high-DPI render |
 | RT9130E | — | representative; source PDF text is font-garbage, needs visual transcription |
 | RT540E | — | representative; no source PDF downloaded yet |
+| GMK3050-3 … GMK6450-1 (19 all-terrain) | Manitowoc **metric** product guides | extracted via `parse_grove_metric.py` (telescopic-boom chart) |
+
+All-terrain (GMK) charts come from manitowoc.com metric product guides (`ingest/batch_gmk.py`).
+GMK5150XLe (no metric guide; electric variant of GMK5150XL) and GMK7550 (imperial only) are not
+included. A few L/electric variants (GMK3060L-1, GMK4100L-2, GMK5150L-1e) parsed below their rated
+max — the telescopic-boom page chosen is likely a reduced-counterweight config; spot-check before
+relying on those.
 
 > **Data status:** Extracted/transcribed capacities are read from the standard main-boom,
 > 100% counterweight, 360° chart; tip heights are **approximate** (from max boom angle), and a
