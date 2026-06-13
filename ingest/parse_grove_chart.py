@@ -32,8 +32,10 @@ sys.path.insert(0, str(ROOT))
 from crane_tool.units import ft_to_m, pounds_to_tonnes  # noqa: E402
 
 PIVOT_HEIGHT_M = 2.4  # approximate boom-foot pin height above ground for tip-height estimate
-NUM = re.compile(r"^\*?[\d,]+$")
-HEADER_RE = re.compile(r"(\d+)\s*-\s*(\d+)\s*ft\.?\s+([\d,]+)\s*lbs", re.IGNORECASE)
+NUM = re.compile(r"^[*+]*\d[\d,]*$")  # capacity token; tolerates footnote markers '*', '+', '++'
+MIN_CAPACITY_LB = 1000  # ignore stray small integers; real chart capacities are well above this
+# Sub-chart headers to avoid when auto-picking the main-boom chart page.
+NON_MAIN = ("extension", "swingaway", "swing-away", "jib", "offset", "luffing", "insert")
 
 
 def _lines(page):
@@ -51,51 +53,85 @@ def _lines(page):
 
 
 def _find_chart_page(pdf):
-    """Pick the primary chart page: header with '100%' and a 'Feet <booms>' column row."""
+    """Pick the MAIN-boom chart page.
+
+    A candidate has 'Pounds', a 'Feet <booms>' column header, and '100%'. Among candidates,
+    prefer pages without jib/extension keywords, then the one charting the largest capacity
+    (the main boom chart carries the biggest numbers; jib/offset charts are far smaller).
+    """
+    cands = []
     for pi, page in enumerate(pdf.pages):
         text = page.extract_text() or ""
-        if "Pounds" in text and re.search(r"Feet\s+\d+", text) and "100%" in text:
-            return pi, page
-    return None, None
+        if "Pounds" in text and re.search(r"Feet\s+\d", text) and "100%" in text:
+            cands.append((pi, page, text))
+    if not cands:
+        return None, None
+    pool = [c for c in cands if not any(k in c[2].lower() for k in NON_MAIN)] or cands
+
+    def max_capacity(text: str) -> int:
+        vals = [int(x.replace(",", "")) for x in re.findall(r"\d[\d,]{3,}", text)]
+        return max(vals) if vals else 0
+
+    pool.sort(key=lambda c: max_capacity(c[2]), reverse=True)
+    return pool[0][0], pool[0][1]
 
 
 def _to_float(tok: str) -> float:
-    return float(tok.replace(",", "").replace("*", ""))
+    return float(tok.replace(",", "").replace("*", "").replace("+", ""))
 
 
-def parse(pdf_path: Path, manufacturer: str, model: str) -> dict:
+def parse(pdf_path: Path, manufacturer: str, model: str, page_index: int | None = None) -> dict:
     with pdfplumber.open(str(pdf_path)) as pdf:
-        pi, page = _find_chart_page(pdf)
+        if page_index is not None:
+            pi, page = page_index, pdf.pages[page_index]
+        else:
+            pi, page = _find_chart_page(pdf)
         if page is None:
             raise SystemExit(f"No standard Grove chart page found in {pdf_path.name}")
         lines = _lines(page)
         full_text = page.extract_text() or ""
 
-        # Header: boom range + counterweight.
-        m = HEADER_RE.search(full_text)
+        # Header: counterweight (first 'NN,NNN lb' figure on the page).
+        m = re.search(r"([\d,]{4,})\s*lbs?\b", full_text)
         counterweight = (
-            f"{m.group(3)} lb counterweight, 100% / 360 deg (as charted)" if m else "as charted"
+            f"{m.group(1)} lb counterweight, 100% / 360 deg (as charted)" if m else "as charted"
         )
 
-        # Boom-length column header: the line beginning with 'Feet'.
+        numword = re.compile(r"^\d+(\.\d+)?$")  # boom length, e.g. '40', '37.3', '42.3' (foot mark)
+
+        def boom_val(tok: str):
+            """Boom length from a header token, tolerating foot-marks (42.3') and footnote
+            asterisks (**70)."""
+            tok = tok.strip("*'’\" ")
+            return float(tok) if numword.match(tok) else None
+
+        # Boom-length column header: the 'Feet' line. Boom lengths are either on that same line or
+        # (some layouts) on the immediately following line. The 'Feet' word also marks the x of the
+        # radius column.
         boom_cols: list[tuple[float, float]] = []  # (x_center, boom_ft)
-        hdr_top = None
-        for top, ws in lines:
-            if ws and ws[0]["text"].lower() == "feet":
+        hdr_top = radius_x = None
+        for idx, (top, ws) in enumerate(lines):
+            if ws and ws[0]["text"].lower() in ("feet", "fest"):  # 'fest' = common OCR/glyph slip
                 hdr_top = top
-                for w in ws[1:]:
-                    if w["text"].isdigit():
-                        boom_cols.append(((w["x0"] + w["x1"]) / 2, float(w["text"])))
+                radius_x = (ws[0]["x0"] + ws[0]["x1"]) / 2
+                src = ws[1:]
+                if not any(boom_val(w["text"]) is not None for w in src) and idx + 1 < len(lines):
+                    hdr_top, src = lines[idx + 1][0], lines[idx + 1][1]
+                for w in src:
+                    bv = boom_val(w["text"])
+                    if bv is not None:
+                        boom_cols.append(((w["x0"] + w["x1"]) / 2, bv))
                 break
-        if not boom_cols or hdr_top is None:
+        if not boom_cols or hdr_top is None or radius_x is None:
             raise SystemExit("Could not locate boom-length column header ('Feet ...').")
 
-        # End of the main grid: the 'Minimum boom angle ...' footer (a secondary 0-deg chart and
-        # the page header lie outside this band and must be ignored).
+        # End of the main grid: a 'Minimum boom angle ...' or 'NOTES' line (secondary 0-deg charts
+        # and the page header lie outside this band and must be ignored).
         end_top = float("inf")
         for top, ws in lines:
-            if top > hdr_top and " ".join(w["text"] for w in ws).lower().startswith(
-                "minimum boom angle"
+            joined = " ".join(w["text"] for w in ws).lower()
+            if top > hdr_top and (
+                joined.startswith("minimum boom angle") or joined.startswith("notes")
             ):
                 end_top = top
                 break
@@ -116,12 +152,14 @@ def parse(pdf_path: Path, manufacturer: str, model: str) -> dict:
             for w in ws:
                 t = w["text"]
                 xc = (w["x0"] + w["x1"]) / 2
-                if 65 <= w["x0"] <= 75 and t.isdigit() and int(t) <= 400:
+                if abs(xc - radius_x) <= 14 and t.isdigit() and int(t) <= 400:
                     radius_labels.append((top, float(t)))
                 elif t.startswith("(") and t.rstrip(")").lstrip("(").replace(".", "").isdigit():
                     angles.append((top, xc, float(t.strip("()"))))
-                elif NUM.match(t) and "," in t:
-                    caps.append((top, xc, _to_float(t)))
+                elif NUM.match(t):
+                    val = _to_float(t)
+                    if val >= MIN_CAPACITY_LB:
+                        caps.append((top, xc, val))
 
         def nearest_radius(top: float) -> float | None:
             cand = [(abs(top - rt), r) for rt, r in radius_labels]
@@ -149,6 +187,14 @@ def parse(pdf_path: Path, manufacturer: str, model: str) -> dict:
         boom_configs = []
         for boom_ft in sorted(grid):
             pts = sorted(grid[boom_ft].items())
+            # Capacity must not increase with radius on a load chart; drop upward violations,
+            # which are extraction misreads (e.g. a value pulled from an adjacent column).
+            cleaned, last = [], float("inf")
+            for r, lb in pts:
+                if lb <= last + 1e-6:
+                    cleaned.append((r, lb))
+                    last = lb
+            pts = cleaned
             boom_m = ft_to_m(boom_ft)
             ang = amax.get(boom_ft, 70.0)
             tip_h = round(PIVOT_HEIGHT_M + boom_m * math.sin(math.radians(ang)), 1)
@@ -180,7 +226,8 @@ def parse(pdf_path: Path, manufacturer: str, model: str) -> dict:
         "counterweight": counterweight,
         "source_pdf": pdf_path.name,
         "notes": f"Main-boom chart, page {pi + 1}. Tip heights APPROXIMATE (from max boom angle).",
-        "data_status": "VERIFIED from source PDF via pdfplumber (capacities exact; heights approx)",
+        "data_status": "EXTRACTED from source PDF via pdfplumber (capacities from chart text; "
+        "occasional upward-misread points dropped; tip heights approximate). Spot-check advised.",
         "boom_configs": boom_configs,
     }
 
@@ -191,9 +238,10 @@ def main(argv=None) -> int:
     ap.add_argument("--manufacturer", required=True)
     ap.add_argument("--model", required=True)
     ap.add_argument("--out", type=Path, required=True)
+    ap.add_argument("--page", type=int, default=None, help="0-based page index of the main chart")
     args = ap.parse_args(argv)
 
-    data = parse(args.pdf, args.manufacturer, args.model)
+    data = parse(args.pdf, args.manufacturer, args.model, page_index=args.page)
     args.out.write_text(json.dumps(data, indent=2), encoding="utf-8")
     n = sum(len(b["points"]) for b in data["boom_configs"])
     print(

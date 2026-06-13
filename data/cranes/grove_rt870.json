@@ -7,7 +7,7 @@
   "counterweight": "11,500 lb counterweight, 100% / 360 deg (as charted)",
   "source_pdf": "Grove-RT870.pdf",
   "notes": "Main-boom chart, page 6. Tip heights APPROXIMATE (from max boom angle).",
-  "data_status": "VERIFIED from source PDF via pdfplumber (capacities exact; heights approx)",
+  "data_status": "EXTRACTED from source PDF via pdfplumber (capacities from chart text; occasional upward-misread points dropped; tip heights approximate). Spot-check advised.",
   "boom_configs": [
     {
       "boom_length_m": 12.2,
