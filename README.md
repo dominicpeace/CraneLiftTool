@@ -47,11 +47,20 @@ Set-Location "C:\Users\tyu\CraneLiftTool"
 ## Crane data
 
 The crane library lives in `data/cranes/` as one JSON file per model (metric units: metres,
-tonnes). The MVP set is a representative range of Grove rough-terrain cranes.
+tonnes), a range of Grove rough-terrain cranes. Each file's `data_status` field records its
+provenance:
 
-> **Data status:** MVP figures are representative/approximate and must be verified against the
-> source manufacturer load chart (see each JSON's `source_pdf` and `data_status` fields) before
-> being used for real decisions.
+| Crane | Source | Status |
+|---|---|---|
+| RT870, RT9100, RT890E, RT880E, RT9150E | manufacturer PDF | extracted via `parse_grove_chart.py` (main-boom chart) |
+| RT875E | scanned PDF (image) | transcribed by hand from a high-DPI render |
+| RT9130E | — | representative; source PDF text is font-garbage, needs visual transcription |
+| RT540E | — | representative; no source PDF downloaded yet |
+
+> **Data status:** Extracted/transcribed capacities are read from the standard main-boom,
+> 100% counterweight, 360° chart; tip heights are **approximate** (from max boom angle), and a
+> few upward-misread points are auto-dropped. Always verify against the actual manufacturer load
+> chart (see each JSON's `source_pdf` / `data_status`) before any real decision.
 
 ### Growing the library
 
