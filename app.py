@@ -10,7 +10,7 @@ import pandas as pd
 import streamlit as st
 
 from crane_tool.data_loader import CraneDataError, load_library
-from crane_tool.chart_plot import plot_load_chart
+from crane_tool.chart_plot import plot_duty_point, plot_load_chart
 from crane_tool.models import LiftRequest
 from crane_tool.selector import (
     SAFE_UTILIZATION,
@@ -121,8 +121,11 @@ def main() -> None:
         st.error(result.reason, icon="⛔")
 
     if result.capacity_t is not None:
-        fig = plot_load_chart(result, req)
-        st.pyplot(fig)
+        plot_col, duty_col = st.columns(2)
+        with plot_col:
+            st.pyplot(plot_load_chart(result, req))
+        with duty_col:
+            st.pyplot(plot_duty_point(result, req))
     else:
         st.info(
             "No load-chart curve to plot for this crane at the requested radius/height "

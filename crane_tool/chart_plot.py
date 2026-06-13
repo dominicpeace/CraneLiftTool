@@ -114,3 +114,58 @@ def plot_load_chart(result: LiftResult, req: LiftRequest) -> Figure:
     )
     fig.tight_layout()
     return fig
+
+
+# Approximate boom-pivot height above ground for the schematic side view (m).
+PIVOT_HEIGHT_M = 3.0
+
+
+def plot_duty_point(result: LiftResult, req: LiftRequest) -> Figure:
+    """Side-elevation schematic of the lift: the duty point (working radius, lift height) in space,
+    with the boom drawn from the crane pivot to the hook and the hoist line down to the load.
+
+    Coloured green if the lift is suitable, red if not. Distances are to scale (equal aspect).
+    """
+    radius = result.radius_m
+    load_h = req.vertical_lift_m
+    tip_h = required_height(req)
+    color = "#2e7d32" if result.suitable else "#c62828"
+
+    fig, ax = plt.subplots(figsize=(5, 5))
+
+    # Ground and crane base/pivot.
+    ax.axhline(0, color="#8d6e63", linewidth=1.5, zorder=1)
+    ax.add_patch(plt.Rectangle((-1.4, 0), 2.8, PIVOT_HEIGHT_M, color="#9e9e9e", alpha=0.55, zorder=2))
+
+    # Boom (pivot -> hook tip) and hoist rope (tip -> load).
+    ax.plot([0, radius], [PIVOT_HEIGHT_M, tip_h], color="#1f4e79", linewidth=2.6, zorder=3,
+            label=(f"boom {result.boom_length_m:.0f} m" if result.boom_length_m else "boom"))
+    ax.plot([radius, radius], [tip_h, load_h], color="#666666", linewidth=1.0, linestyle=":",
+            zorder=3)
+
+    # Duty point = the load in space (working radius, lift height).
+    ax.scatter([radius], [load_h], s=150, color=color, edgecolors="black", linewidths=1.0,
+               zorder=5, label=f"duty point: {req.load_t:.1f} t")
+    ax.annotate(
+        f"{req.load_t:.1f} t @ R={radius:.1f} m, h={load_h:.1f} m",
+        xy=(radius, load_h), xytext=(6, 10), textcoords="offset points",
+        fontsize=9, color=color, fontweight="bold",
+    )
+
+    # Reference guide lines to the axes.
+    ax.plot([radius, radius], [0, load_h], color=color, linewidth=0.8, linestyle="--", alpha=0.5)
+    ax.plot([0, radius], [load_h, load_h], color=color, linewidth=0.8, linestyle="--", alpha=0.5)
+
+    verdict = "SUITABLE" if result.suitable else "NOT SUITABLE"
+    util = f"  ({result.utilization_pct:.0f}%)" if result.utilization_pct is not None else ""
+    ax.set_title(f"Duty point — side view  ·  {verdict}{util}", fontsize=11, color=color,
+                 fontweight="bold")
+    ax.set_xlabel("Horizontal radius (m)")
+    ax.set_ylabel("Height (m)")
+    ax.grid(True, linestyle=":", alpha=0.5)
+    ax.set_xlim(left=-2.0, right=max(radius, 1.0) * 1.25 + 2)
+    ax.set_ylim(bottom=0, top=max(tip_h, load_h, PIVOT_HEIGHT_M) * 1.2 + 1)
+    ax.set_aspect("equal", adjustable="box")
+    ax.legend(loc="upper right", fontsize=8, framealpha=0.9)
+    fig.tight_layout()
+    return fig
