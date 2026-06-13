@@ -59,10 +59,11 @@ provenance:
 | GMK3050-3 … GMK6450-1 (19 all-terrain) | Manitowoc **metric** product guides | extracted via `parse_grove_metric.py` (telescopic-boom chart) |
 
 All-terrain (GMK) charts come from manitowoc.com metric product guides (`ingest/batch_gmk.py`).
-GMK5150XLe (no metric guide; electric variant of GMK5150XL) and GMK7550 (imperial only) are not
-included. A few L/electric variants (GMK3060L-1, GMK4100L-2, GMK5150L-1e) parsed below their rated
-max — the telescopic-boom page chosen is likely a reduced-counterweight config; spot-check before
-relying on those.
+GMK7550 has only an imperial guide, converted to metric via `parse_gmk_imperial.py` (499 t =
+1,100,000 lb). GMK5150XLe publishes no load-chart guide and is the electric variant of GMK5150XL,
+so its chart is mirrored from GMK5150XL (`ingest/_make_xle.py`). A few L/electric variants
+(GMK3060L-1, GMK4100L-2, GMK5150L-1e) parsed below their rated max — the telescopic-boom page
+chosen is likely a reduced-counterweight config; spot-check before relying on those.
 
 > **Data status:** Extracted/transcribed capacities are read from the standard main-boom,
 > 100% counterweight, 360° chart; tip heights are **approximate** (from max boom angle), and a
