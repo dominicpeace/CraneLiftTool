@@ -598,10 +598,6 @@
         {
           "radius_m": 40.0,
           "capacity_t": 5.9
-        },
-        {
-          "radius_m": 42.0,
-          "capacity_t": 5.0
         }
       ]
     },

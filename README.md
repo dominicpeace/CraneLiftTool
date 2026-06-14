@@ -57,6 +57,14 @@ provenance:
 | RT9130E | — | representative; source PDF text is font-garbage, needs visual transcription |
 | RT540E | — | representative; no source PDF downloaded yet |
 | GMK3050-3 … GMK6450-1 (19 all-terrain) | Manitowoc **metric** product guides | extracted via `parse_grove_metric.py` (telescopic-boom chart) |
+| GRT655, GRT655L, GRT8100-1, GRT8120, GRT9165 (rough-terrain) | Manitowoc **metric** product guides | extracted via `parse_grove_metric.py` (`ingest/batch_grt.py`) |
+
+Rough-terrain GRT charts come from manitowoc.com metric product guides (`ingest/batch_grt.py`),
+the official source (takes precedence over the third-party RT charts above where models overlap).
+GRT540 (preliminary guide, dot-thousands number format), GRT765 and GRT780 (imperial-only, a
+boom-angle chart layout) did not parse cleanly and are **excluded** rather than shipped with bad
+data. GRT9165 parsed below its 150 t rating (the auto-selected page is likely a reduced
+configuration) — flagged in its `data_status`.
 
 All-terrain (GMK) charts come from manitowoc.com metric product guides (`ingest/batch_gmk.py`).
 GMK7550 has only an imperial guide, converted to metric via `parse_gmk_imperial.py` (499 t =

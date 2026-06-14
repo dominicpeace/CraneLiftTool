@@ -61,43 +61,87 @@ def _lines(page):
     return [(top, sorted(ws, key=lambda w: w["x0"])) for top, ws in rows]
 
 
+def _cx(w) -> float:
+    return (w["x0"] + w["x1"]) / 2
+
+
+def boom_col_val(tok: str) -> float | None:
+    """Boom length from a header token; takes the first number, tolerating ranges like
+    '18,6-19,0' (telescope range) and parenthetical/marker suffixes."""
+    tok = re.sub(r"\(.*?\)", "", tok).strip("*+ ")
+    m = re.match(r"\d+(,\d+)?", tok)
+    return float(m.group(0).replace(",", ".")) if m else None
+
+
 def _header_line(lines):
-    """The boom-length column header: first token 'm' followed by >=3 metric numbers."""
+    """The boom-length column header: first token 'm' followed by >=3 boom-length numbers."""
     for top, ws in lines:
         if ws and ws[0]["text"].lower() == "m":
-            nums = [w for w in ws[1:] if metric_float(w["text"]) is not None]
-            if len(nums) >= 3:
+            if sum(boom_col_val(w["text"]) is not None for w in ws[1:]) >= 3:
                 return top, ws
     return None, None
 
 
-def _max_capacity(lines) -> float:
-    best = 0.0
-    _, hdr = _header_line(lines)
+def _extract_grid(lines):
+    """Parse the chart grid on a page. Returns (grid, boom_cols, radius_x, hdr_top) or all-None."""
+    hdr_top, hdr_ws = _header_line(lines)
+    if hdr_ws is None:
+        return None, None, None, None
+    radius_x = _cx(hdr_ws[0])
+    right_m_x = _cx(hdr_ws[-1])  # mirrored radius column on the right
+    boom_cols = [(_cx(w), boom_col_val(w["text"])) for w in hdr_ws[1:-1]
+                 if boom_col_val(w["text"]) is not None]
+    if not boom_cols:
+        return None, None, None, None
+
+    def nearest_boom(xc: float) -> float:
+        return min(boom_cols, key=lambda c: abs(c[0] - xc))[1]
+
+    grid: dict[float, dict[float, float]] = {}
     for top, ws in lines:
-        for w in ws:
-            v = metric_float(w["text"])
-            if v is not None and 0 < v < 1000:
-                best = max(best, v)
-    return best
+        if top <= hdr_top:
+            continue
+        if abs(_cx(ws[0]) - radius_x) > 16:
+            continue
+        r = metric_float(ws[0]["text"])
+        if r is None or r > 200:
+            continue
+        for w in ws[1:]:
+            xc = _cx(w)
+            if xc <= radius_x + 15 or xc >= right_m_x - 15:
+                continue  # skip the mirrored radius / out-of-grid tokens
+            if "," not in w["text"]:
+                continue  # real capacities always carry a comma (kg-thousands or t-decimal);
+                #            bare integers are footnote refs / dimensions, not capacities
+            cap = metric_float(w["text"])
+            if cap is None or cap <= 0:
+                continue
+            b = nearest_boom(xc)
+            prev = grid.setdefault(b, {}).get(r)
+            grid[b][r] = cap if prev is None else max(prev, cap)
+    return grid, boom_cols, radius_x, hdr_top
+
+
+def _grid_max(grid) -> float:
+    return max((c for d in grid.values() for c in d.values()), default=0.0)
 
 
 def _find_chart_page(pdf, want_index=None):
+    """Pick the main telescopic-boom chart: among 'telescopic boom' + 360 pages with a valid grid,
+    the one whose parsed grid has the highest capacity (the full-counterweight main chart). Ranking
+    on the parsed grid (not raw page numbers) ignores stray spec/dimension figures."""
     if want_index is not None:
         return want_index, pdf.pages[want_index]
-    cands = []
+    best = None  # (pi, page, grid_max)
     for pi, page in enumerate(pdf.pages):
         text = (page.extract_text() or "").lower()
         if "telescopic boom" in text and "360" in text:
-            if any(k in text for k in EXCLUDE):
-                continue
-            lines = _lines(page)
-            if _header_line(lines)[1] is not None:
-                cands.append((pi, page, _max_capacity(lines)))
-    if not cands:
-        return None, None
-    cands.sort(key=lambda c: c[2], reverse=True)
-    return cands[0][0], cands[0][1]
+            grid, *_ = _extract_grid(_lines(page))
+            if grid:
+                gm = _grid_max(grid)
+                if best is None or gm > best[2] + 1e-6:
+                    best = (pi, page, gm)
+    return (best[0], best[1]) if best else (None, None)
 
 
 def parse(pdf_path: Path, manufacturer: str, model: str, page_index=None) -> dict:
@@ -108,48 +152,15 @@ def parse(pdf_path: Path, manufacturer: str, model: str, page_index=None) -> dic
         lines = _lines(page)
         full_text = page.extract_text() or ""
 
-        cw = re.search(r"360°?\s*([\d,]+)\s*t\b", full_text)
+        cw = re.search(r"360°?\s*([\d., ]+?)\s*(kg|t)\b", full_text)
         counterweight = (
-            f"{cw.group(1)} t counterweight, 360 deg (as charted)" if cw else "as charted"
+            f"{cw.group(1).strip()} {cw.group(2)} counterweight, 360 deg (as charted)"
+            if cw else "as charted"
         )
 
-        hdr_top, hdr_ws = _header_line(lines)
-        if hdr_ws is None:
-            raise SystemExit("Could not locate the 'm <boom lengths>' header line.")
-        radius_x = (hdr_ws[0]["x0"] + hdr_ws[0]["x1"]) / 2
-        right_m_x = (hdr_ws[-1]["x0"] + hdr_ws[-1]["x1"]) / 2  # mirrored radius column on the right
-        boom_cols = []  # (x_center, boom_m)
-        for w in hdr_ws[1:-1]:
-            bv = metric_float(w["text"])
-            if bv is not None:
-                boom_cols.append(((w["x0"] + w["x1"]) / 2, bv))
-        if not boom_cols:
-            raise SystemExit("No boom-length columns parsed from header.")
-
-        def nearest_boom(xc: float) -> float:
-            return min(boom_cols, key=lambda c: abs(c[0] - xc))[1]
-
-        # grid[boom_m][radius_m] = capacity_t (keep the max where columns merge, e.g. the (0deg) col)
-        grid: dict[float, dict[float, float]] = {}
-        for top, ws in lines:
-            if top <= hdr_top:
-                continue
-            first = ws[0]
-            if abs((first["x0"] + first["x1"]) / 2 - radius_x) > 16:
-                continue
-            r = metric_float(first["text"])
-            if r is None or r > 200:
-                continue
-            for w in ws[1:]:
-                xc = (w["x0"] + w["x1"]) / 2
-                if xc <= radius_x + 15 or xc >= right_m_x - 15:
-                    continue  # skip the mirrored radius / out-of-grid tokens
-                cap = metric_float(w["text"])
-                if cap is None or cap <= 0:
-                    continue
-                b = nearest_boom(xc)
-                prev = grid.setdefault(b, {}).get(r)
-                grid[b][r] = cap if prev is None else max(prev, cap)
+        grid, boom_cols, radius_x, hdr_top = _extract_grid(lines)
+        if not grid:
+            raise SystemExit("Could not parse a chart grid on the selected page.")
 
         boom_configs = []
         for boom_m in sorted(grid):
@@ -170,7 +181,7 @@ def parse(pdf_path: Path, manufacturer: str, model: str, page_index=None) -> dic
                 }
             )
 
-        max_cap = round(max(c for d in grid.values() for c in d.values()), 1)
+        max_cap = round(_grid_max(grid), 1)
         max_boom = round(max(grid), 1)
 
     return {
