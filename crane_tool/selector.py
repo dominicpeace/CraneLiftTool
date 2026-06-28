@@ -47,20 +47,22 @@ def best_capacity(
     ``(capacity_t, boom_length_m)``, or ``(None, None)`` if the radius is off the chart or the
     height cannot be reached at that radius.
     """
+    # Distance from the boom pivot to the duty point. The boom must span at least this to place the
+    # tip at (radius, height); a shorter boom simply cannot reach that height at that radius, however
+    # far its capacity table extends.
     needed_len = math.hypot(radius_m, max(height_m - PIVOT_HEIGHT_M, 0.0))
     cands = [
         cfg
         for cfg in crane.boom_configs
-        if cfg.boom_length_m >= radius_m and cfg.min_radius_m <= radius_m <= cfg.max_radius_m
+        if cfg.min_radius_m <= radius_m <= cfg.max_radius_m  # capacity is charted at this radius
+        and cfg.boom_length_m >= needed_len - 1e-6           # AND long enough to reach the height
     ]
     if not cands:
         return None, None
-    # If even the longest boom that charts this radius is well short of the geometry needed to put
-    # the hook at the required height, the lift is out of reach at this radius.
-    if needed_len > max(c.boom_length_m for c in cands) + 2.0:
-        return None, None
-    # The boom whose length best matches the duty-point geometry (tip at radius/height).
-    best = min(cands, key=lambda c: abs(c.boom_length_m - needed_len))
+    # Read capacity from the shortest boom that reaches the point: its arc passes through (or just
+    # above) the duty point, exactly how a working-range chart is read by hand. (Among booms long
+    # enough to reach, the shortest is also the closest match to the duty-point geometry.)
+    best = min(cands, key=lambda c: c.boom_length_m)
     return best.capacity_at(radius_m), best.boom_length_m
 
 
@@ -71,12 +73,17 @@ def evaluate_crane(crane: CraneModel, req: LiftRequest) -> LiftResult:
     capacity, boom = best_capacity(crane, radius, height)
 
     if capacity is None:
-        # Distinguish "can't reach the height" from "radius off the chart" for a useful message.
-        reaches_height = any(c.max_tip_height_m >= height for c in crane.boom_configs)
-        if not reaches_height:
-            reason = f"Cannot reach required height of {height:.1f} m."
-        else:
+        # Distinguish "radius off the chart" from "can't reach that height at this radius".
+        radius_charted = any(
+            c.min_radius_m <= radius <= c.max_radius_m for c in crane.boom_configs
+        )
+        if not radius_charted:
             reason = f"Horizontal reach {radius:.1f} m is outside the load chart."
+        else:
+            reason = (
+                f"Cannot reach {height:.1f} m height at {radius:.1f} m radius "
+                f"(would need a longer boom than charted)."
+            )
         return LiftResult(
             crane=crane,
             radius_m=radius,
