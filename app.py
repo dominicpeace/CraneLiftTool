@@ -151,7 +151,14 @@ def main() -> None:
     )
     names = [c.name for c in cranes]
     default_name = rec.crane.name if rec is not None else names[-1]
-    chosen_name = st.selectbox("Crane model", names, index=names.index(default_name))
+    # Keep the user's chosen model sticky: default to the recommendation only on first load (or if
+    # the current pick has been filtered out of the list), so changing the lift inputs to check
+    # other duty points does NOT silently switch the chart to a different crane.
+    if st.session_state.get("crane_model") not in names:
+        st.session_state["crane_model"] = default_name
+    chosen_name = st.selectbox("Crane model", names, key="crane_model")
+    if rec is not None and chosen_name != rec.crane.name:
+        st.caption(f"🎯 Recommended for this lift: **{rec.crane.name}** (selection stays on your choice).")
     chosen = next(c for c in cranes if c.name == chosen_name)
     result = evaluate_crane(chosen, req)
 
