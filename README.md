@@ -1,3 +1,16 @@
+---
+title: Crane Lifting Study
+emoji: 🏗️
+colorFrom: blue
+colorTo: gray
+sdk: streamlit
+sdk_version: 1.58.0
+app_file: app.py
+pinned: false
+---
+
+<!-- The YAML block above configures Hugging Face Spaces (zero-login hosting). GitHub ignores it. -->
+
 # Crane Lifting Study Tool
 
 A quick-check tool for crane selection. Given a lift's geometry and weight, it recommends a
@@ -20,9 +33,13 @@ the recommendation with any other model in the library.
 
 - Recommended crane (smallest class that keeps utilization below 90%).
 - Rated capacity at the required radius and height, and the % utilization.
-- A load-chart plot (capacity vs working radius) with the operating point marked and a 90% line.
+- A comparison table across the whole library (suitable models first) as a first pass.
+- For a selected model, the **actual manufacturer working-range diagram** with a vertical line at
+  the horizontal reach and a horizontal line at the lift height; the rated capacity is read where
+  they meet — exactly how the PDF chart is read by hand. Cranes without a calibratable diagram fall
+  back to a reconstructed chart. Chart images + axis calibration are built by `ingest/build_charts.py`
+  and stored under `data/charts/` (with a `wr_chart` block in each crane JSON).
 - An override dropdown to evaluate any other crane in the library.
-- A comparison table across the whole library.
 
 ## Suitability rule
 
@@ -102,7 +119,8 @@ CraneLiftTool/
 ├── app.py                  # Streamlit UI
 ├── crane_tool/             # core logic (units, models, loader, selector, plot)
 ├── data/cranes/            # crane library (JSON, metric)
+├── data/charts/            # working-range chart PNGs (committed; PDFs are git-ignored)
 ├── data/index.csv          # scraped summary specs + PDF URLs
-├── ingest/                 # scrape / download / extract tooling
+├── ingest/                 # scrape / download / extract tooling (incl. build_charts.py)
 └── tests/                  # unit tests
 ```
