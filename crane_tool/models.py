@@ -79,6 +79,7 @@ class CraneModel:
     source_pdf: str = ""
     notes: str = ""
     data_status: str = ""
+    wr_chart: Optional[dict] = None  # real working-range chart image + axis calibration (if available)
 
     @property
     def name(self) -> str:

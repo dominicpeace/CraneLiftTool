@@ -66,6 +66,7 @@ def parse_crane(raw: dict, ctx: str = "<crane>") -> CraneModel:
             source_pdf=str(raw.get("source_pdf", "")),
             notes=str(raw.get("notes", "")),
             data_status=str(raw.get("data_status", "")),
+            wr_chart=raw.get("wr_chart"),
         )
     except (KeyError, TypeError, ValueError) as exc:
         raise CraneDataError(f"{ctx}: bad crane fields ({exc})") from exc

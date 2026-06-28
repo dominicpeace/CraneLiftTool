@@ -47,6 +47,45 @@ def geometry_sketch(reach_m: float, lift_m: float) -> Figure:
     return fig
 
 
+def plot_real_chart(result: LiftResult, req: LiftRequest, image_path: str) -> Figure:
+    """Overlay the reach/lift crosshair on the crane's actual working-range diagram (PNG).
+
+    Uses the axis calibration in ``result.crane.wr_chart`` (pixel = m*value + b for radius and
+    height) to place a vertical line at the working radius and a horizontal line at the lift height,
+    marking the duty point — exactly how the chart is read by hand.
+    """
+    cal = result.crane.wr_chart
+    rx, hy = cal["rx"], cal["hy"]
+    reach, lift = result.radius_m, req.vertical_lift_m
+    color = "#1faa00" if result.suitable else "#d32f2f"
+
+    img = plt.imread(image_path)
+    h_px, w_px = img.shape[0], img.shape[1]
+    fig, ax = plt.subplots(figsize=(7.6, 7.6 * h_px / w_px))
+    ax.imshow(img)
+
+    x_reach = rx[0] * reach + rx[1]
+    y_lift = hy[0] * lift + hy[1]
+    y_base = hy[1]                          # height = 0
+    x_left = rx[0] * cal["r_max"] + rx[1]   # left edge (max radius tick)
+    ax.plot([x_reach, x_reach], [y_base, y_lift], color="#d32f2f", linewidth=1.8, zorder=5)
+    ax.plot([x_reach, x_left], [y_lift, y_lift], color="#d32f2f", linewidth=1.8, zorder=5)
+    ax.scatter([x_reach], [y_lift], s=120, color=color, edgecolors="black", linewidths=1.2, zorder=6)
+    cap_txt = f"{result.capacity_t:.1f} t" if result.capacity_t is not None else "out of chart"
+    ax.annotate(f"  {cap_txt}", (x_reach, y_lift), color=color, fontsize=13, fontweight="bold",
+                zorder=7)
+
+    verdict = "SUITABLE" if result.suitable else "NOT SUITABLE"
+    util = f" · {result.utilization_pct:.0f}% used" if result.utilization_pct is not None else ""
+    ax.set_title(f"{result.crane.name}  ·  reach {reach:.1f} m × lift {lift:.1f} m  →  {cap_txt}"
+                 f"  ({verdict}{util})", fontsize=10.5, color=color, fontweight="bold")
+    ax.set_xlim(0, w_px)
+    ax.set_ylim(h_px, 0)
+    ax.axis("off")
+    fig.tight_layout()
+    return fig
+
+
 def plot_range_chart(result: LiftResult, req: LiftRequest) -> Figure:
     """Working-range diagram for one crane with the lift's crosshair lines.
 

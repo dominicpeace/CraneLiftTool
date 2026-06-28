@@ -9,8 +9,8 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
-from crane_tool.data_loader import CraneDataError, load_library
-from crane_tool.chart_plot import geometry_sketch, plot_range_chart
+from crane_tool.data_loader import DEFAULT_DATA_DIR, CraneDataError, load_library
+from crane_tool.chart_plot import geometry_sketch, plot_range_chart, plot_real_chart
 from crane_tool.models import LiftRequest
 from crane_tool.selector import (
     SAFE_UTILIZATION,
@@ -23,6 +23,8 @@ from crane_tool.selector import (
 )
 
 st.set_page_config(page_title="Crane Lifting Study", page_icon="🏗️", layout="wide")
+
+DATA_ROOT = DEFAULT_DATA_DIR.parent  # .../data ; chart images live under data/charts/
 
 
 @st.cache_data
@@ -159,7 +161,17 @@ def main() -> None:
         st.error(result.reason, icon="⛔")
 
     if result.capacity_t is not None:
-        st.pyplot(plot_range_chart(result, req), use_container_width=False)
+        cal = chosen.wr_chart
+        img = (DATA_ROOT / cal["image"]) if cal else None
+        if cal and img is not None and img.exists():
+            st.pyplot(plot_real_chart(result, req, str(img)), use_container_width=False)
+            st.caption(
+                "Actual manufacturer working-range chart with your reach (vertical) and lift "
+                "(horizontal) lines — read the rated capacity where they meet a boom arc."
+            )
+        else:
+            st.pyplot(plot_range_chart(result, req), use_container_width=False)
+            st.caption("Reconstructed chart (no source diagram available for this model).")
     else:
         st.info(f"No chart point for this crane at the requested radius/height ({result.reason})")
 
