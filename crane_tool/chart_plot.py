@@ -18,29 +18,94 @@ from matplotlib.figure import Figure
 from .models import LiftRequest, LiftResult
 
 
-def geometry_sketch(reach_m: float, lift_m: float) -> Figure:
-    """Small elevation sketch defining horizontal reach, vertical lift and working radius."""
-    r = max(reach_m, 0.1)
-    h = max(lift_m, 0.1)
-    fig, ax = plt.subplots(figsize=(3.2, 2.4))
-    # Crane at origin; load at (reach, lift).
-    ax.plot([0, r], [0, 0], color="#888", linewidth=1.2)            # horizontal reach
-    ax.plot([r, r], [0, h], color="#888", linewidth=1.2)            # vertical lift
-    ax.plot([0, r], [0, h], color="#d32f2f", linewidth=1.8)         # working radius (slant)
-    ax.scatter([0], [0], s=40, color="#1f4e79", zorder=5)
-    ax.scatter([r], [h], s=60, color="#2e7d32", zorder=5)
-    ax.annotate("crane\ncentre", (0, 0), xytext=(4, 6), textcoords="offset points", fontsize=7)
-    ax.annotate("load", (r, h), xytext=(4, 2), textcoords="offset points", fontsize=7,
-                color="#2e7d32")
-    ax.text(r / 2, -0.12 * h, "horizontal reach\n= √(X²+Y²)", ha="center", va="top", fontsize=7)
-    ax.text(r * 1.02, h / 2, "vertical\nlift (Z)", ha="left", va="center", fontsize=7)
-    ax.text(r * 0.45, h * 0.62, "working radius\n= √(reach²+lift²)", ha="center", va="bottom",
-            fontsize=7, color="#d32f2f", rotation=0)
-    ax.set_xlim(-0.15 * r, r * 1.35)
-    ax.set_ylim(-0.35 * h, h * 1.25)
+def _iso(wx: float, wy: float, wz: float) -> tuple[float, float]:
+    """Project a 3-D world point (X horizontal, Y horizontal, Z up) to 2-D isometric screen coords.
+
+    X runs down-right, Y up-right, Z straight up — a standard isometric view.
+    """
+    c = 0.8660254  # cos 30°
+    return c * (wx + wy), 0.5 * (wy - wx) + wz
+
+
+def _mid(a: tuple[float, float], b: tuple[float, float]) -> tuple[float, float]:
+    return (a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0
+
+
+def _corner(ax, v, a, b, size, color="#9aa0a6") -> None:
+    """Draw a small right-angle marker at vertex ``v`` between the edges toward ``a`` and ``b``."""
+    def unit(p, q):
+        dx, dy = q[0] - p[0], q[1] - p[1]
+        d = math.hypot(dx, dy) or 1.0
+        return dx / d, dy / d
+
+    ua, ub = unit(v, a), unit(v, b)
+    p1 = (v[0] + ua[0] * size, v[1] + ua[1] * size)
+    p2 = (v[0] + (ua[0] + ub[0]) * size, v[1] + (ua[1] + ub[1]) * size)
+    p3 = (v[0] + ub[0] * size, v[1] + ub[1] * size)
+    ax.plot([p1[0], p2[0], p3[0]], [p1[1], p2[1], p3[1]], color=color, linewidth=0.9, zorder=4)
+
+
+def geometry_sketch(x_m: float, y_m: float, lift_m: float) -> Figure:
+    """Isometric 3-D sketch defining the lift geometry: the two horizontal reaches X and Y on the
+    ground, their resultant horizontal reach HR = √(X²+Y²), the vertical lift VL, and the working
+    radius WR = √(HR²+VL²) — the slant straight from the boom pivot to the load.
+
+    Proportions are illustrative (small legs are floored so nothing collapses); the live values are
+    shown in the metric cards above the chart.
+    """
+    scale = max(x_m, y_m, lift_m, 1.0)
+    fx = max(x_m, 0.25 * scale)      # floor lengths so a zero/small input still reads clearly
+    fy = max(y_m, 0.25 * scale)
+    fz = max(lift_m, 0.25 * scale)
+
+    P = _iso(0, 0, 0)                # pivot (origin)
+    C = _iso(fx, 0, 0)               # end of the X leg
+    B = _iso(fx, fy, 0)             # base under the load (end of the Y leg)
+    L = _iso(fx, fy, fz)            # the load
+
+    fig, ax = plt.subplots(figsize=(3.4, 3.2))
+
+    # Faint ground plane (pivot -> X -> base) to anchor the horizontal triangle in 3-D.
+    ax.fill([P[0], C[0], B[0]], [P[1], C[1], B[1]], color="#b8c0cc", alpha=0.16, zorder=0)
+
+    ax.plot([P[0], C[0]], [P[1], C[1]], color="#6b7280", linewidth=1.6, zorder=2)   # X leg
+    ax.plot([C[0], B[0]], [C[1], B[1]], color="#6b7280", linewidth=1.6, zorder=2)   # Y leg
+    ax.plot([P[0], B[0]], [P[1], B[1]], color="#1f77b4", linewidth=1.6,
+            linestyle=(0, (5, 3)), zorder=3)                                        # HR (ground)
+    ax.plot([B[0], L[0]], [B[1], L[1]], color="#2e9e3f", linewidth=1.6,
+            linestyle=(0, (5, 3)), zorder=3)                                        # VL (vertical)
+    ax.plot([P[0], L[0]], [P[1], L[1]], color="#d32f2f", linewidth=2.4, zorder=3)   # WR (slant)
+
+    size = 0.10 * scale
+    _corner(ax, C, P, B, size)       # right angle between X and Y on the ground
+    _corner(ax, B, P, L, size)       # right angle between HR and VL
+
+    ax.scatter(*P, s=46, color="#1f4e79", zorder=6)
+    ax.scatter(*L, s=70, color="#2e7d32", zorder=6)
+
+    ax.annotate("PIVOT", P, xytext=(-6, -9), textcoords="offset points", fontsize=8,
+                color="#1f4e79", fontweight="bold", ha="right")
+    ax.annotate("LOAD", L, xytext=(7, 3), textcoords="offset points", fontsize=8,
+                color="#2e7d32", fontweight="bold")
+    ax.annotate("X", _mid(P, C), xytext=(-3, -10), textcoords="offset points", fontsize=8,
+                color="#444", ha="center")
+    ax.annotate("Y", _mid(C, B), xytext=(9, -3), textcoords="offset points", fontsize=8, color="#444")
+    ax.annotate("HR", _mid(P, B), xytext=(0, 7), textcoords="offset points", fontsize=8,
+                color="#1f77b4", fontweight="bold", ha="center")
+    ax.annotate("VL", _mid(B, L), xytext=(8, 0), textcoords="offset points", fontsize=8,
+                color="#2e9e3f", fontweight="bold")
+    ax.annotate("WR", _mid(P, L), xytext=(-14, 2), textcoords="offset points", fontsize=8,
+                color="#d32f2f", fontweight="bold")
+
+    xs, ys = [P[0], C[0], B[0], L[0]], [P[1], C[1], B[1], L[1]]
+    pad = 0.34 * max(max(xs) - min(xs), max(ys) - min(ys), 1.0)
+    ax.set_xlim(min(xs) - pad, max(xs) + pad)
+    ax.set_ylim(min(ys) - pad, max(ys) + pad)
     ax.set_aspect("equal", adjustable="box")
     ax.axis("off")
-    fig.tight_layout()
+    fig.text(0.5, 0.015, "HR = √(X² + Y²)    ·    WR = √(HR² + VL²)", ha="center", fontsize=7,
+             color="#666")
+    fig.tight_layout(rect=(0, 0.05, 1, 1))
     return fig
 
 

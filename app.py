@@ -88,7 +88,7 @@ def main() -> None:
     with st.sidebar:
         st.divider()
         st.caption("Geometry")
-        st.pyplot(geometry_sketch(reach, lift), use_container_width=True)
+        st.pyplot(geometry_sketch(x, y, lift), use_container_width=True)
         st.caption(f"Considering {len(cranes)} of {len(full_library)} cranes (type filter).")
 
     c1, c2, c3, c4 = st.columns(4)
