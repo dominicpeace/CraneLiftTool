@@ -1,0 +1,8 @@
+# Tools used ONLY to build/refresh the crane data from manufacturer PDFs and to run the tests.
+# NOT needed to run the deployed app. Install with:  pip install -r requirements-ingest.txt
+numpy>=1.24
+pdfplumber>=0.10
+pymupdf>=1.27
+rapidocr-onnxruntime>=1.3
+requests>=2.31
+pytest>=7.4

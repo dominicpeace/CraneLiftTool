@@ -34,13 +34,17 @@ At or above 90% it is flagged **NOT suitable**.
 ```powershell
 $py = "C:\Users\tyu\AppData\Local\Programs\Python\Python312\python.exe"
 Set-Location "C:\Users\tyu\CraneLiftTool"
-& $py -m pip install -r requirements.txt
+& $py -m pip install -r requirements.txt   # runtime only: streamlit, matplotlib, pandas
 & $py -m streamlit run app.py
 ```
 
-## Tests
+`requirements.txt` is intentionally minimal so cloud deploys (Streamlit Community Cloud) build
+fast. The PDF-ingest and OCR tooling, plus pytest, live in `requirements-ingest.txt`.
+
+## Tests / data tooling
 
 ```powershell
+& $py -m pip install -r requirements-ingest.txt   # pdfplumber, pymupdf, rapidocr, requests, pytest
 & $py -m pytest tests/
 ```
 

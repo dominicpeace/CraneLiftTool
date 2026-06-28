@@ -1,7 +1,5 @@
+# Runtime dependencies for the deployed Streamlit app — kept minimal for fast, reliable
+# cloud builds. Tooling used only to build/refresh the crane data lives in requirements-ingest.txt.
 streamlit>=1.30
 matplotlib>=3.7
-numpy>=1.24
 pandas>=2.0
-pdfplumber>=0.10
-requests>=2.31
-pytest>=7.4
