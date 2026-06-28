@@ -164,7 +164,7 @@ def main() -> None:
         cal = chosen.wr_chart
         img = (DATA_ROOT / cal["image"]) if cal else None
         if cal and img is not None and img.exists():
-            st.pyplot(plot_real_chart(result, req, str(img)), use_container_width=False)
+            st.pyplot(plot_real_chart(result, req, str(img)), use_container_width=True)
             st.caption(
                 "Actual manufacturer working-range chart with your reach (vertical) and lift "
                 "(horizontal) lines — read the rated capacity where they meet a boom arc."

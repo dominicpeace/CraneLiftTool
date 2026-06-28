@@ -61,26 +61,50 @@ def plot_real_chart(result: LiftResult, req: LiftRequest, image_path: str) -> Fi
 
     img = plt.imread(image_path)
     h_px, w_px = img.shape[0], img.shape[1]
-    fig, ax = plt.subplots(figsize=(7.6, 7.6 * h_px / w_px))
-    ax.imshow(img)
 
-    x_reach = rx[0] * reach + rx[1]
-    y_lift = hy[0] * lift + hy[1]
-    y_base = hy[1]                          # height = 0
-    x_left = rx[0] * cal["r_max"] + rx[1]   # left edge (max radius tick)
-    ax.plot([x_reach, x_reach], [y_base, y_lift], color="#d32f2f", linewidth=1.8, zorder=5)
-    ax.plot([x_reach, x_left], [y_lift, y_lift], color="#d32f2f", linewidth=1.8, zorder=5)
-    ax.scatter([x_reach], [y_lift], s=120, color=color, edgecolors="black", linewidths=1.2, zorder=6)
+    # Calibrated corners of the chart's plotting area (pixels). Radius increases right->left
+    # (r=0 near the crane on the right); height increases bottom->top.
+    x_r0 = rx[1]                                 # radius = 0  (right edge of axes)
+    x_rmax = rx[0] * cal["r_max"] + rx[1]        # max radius (left edge of axes)
+    y_h0 = hy[1]                                 # height = 0  (bottom of axes)
+    y_hmax = hy[0] * cal["h_max"] + hy[1]        # max height (top of axes)
+    x_lo, x_hi = sorted((x_rmax, x_r0))
+    y_lo, y_hi = sorted((y_hmax, y_h0))
+    xspan, yspan = x_hi - x_lo, y_hi - y_lo
+
+    # Crop to the chart itself — drop the page header banner above and the hook-block table below so
+    # the diagram fills the view and stays large/readable wherever the duty point falls (the old full
+    # -page render left the chart tiny, worst for high-lift points near the cramped top arcs). Keep
+    # the full right side for the boom-length labels and crane silhouette; pad the other edges a
+    # little to retain the axis tick labels.
+    left = max(0, int(x_lo - 0.08 * xspan))
+    right = w_px
+    top = max(0, int(y_lo - 0.12 * yspan))
+    bottom = min(h_px, int(y_hi + 0.06 * yspan))
+    crop = img[top:bottom, left:right]
+    ch, cw = crop.shape[0], crop.shape[1]
+
+    fig, ax = plt.subplots(figsize=(9.0, 9.0 * ch / cw))
+    ax.imshow(crop)
+
+    # Duty-point crosshair in cropped pixel coordinates.
+    x_reach = rx[0] * reach + rx[1] - left
+    y_lift = hy[0] * lift + hy[1] - top
+    y_base = y_h0 - top                          # height = 0
+    x_left = x_rmax - left                        # max-radius (left) edge of axes
+    ax.plot([x_reach, x_reach], [y_base, y_lift], color="#d32f2f", linewidth=2.0, zorder=5)
+    ax.plot([x_reach, x_left], [y_lift, y_lift], color="#d32f2f", linewidth=2.0, zorder=5)
+    ax.scatter([x_reach], [y_lift], s=140, color=color, edgecolors="black", linewidths=1.3, zorder=6)
     cap_txt = f"{result.capacity_t:.1f} t" if result.capacity_t is not None else "out of chart"
-    ax.annotate(f"  {cap_txt}", (x_reach, y_lift), color=color, fontsize=13, fontweight="bold",
+    ax.annotate(f"  {cap_txt}", (x_reach, y_lift), color=color, fontsize=15, fontweight="bold",
                 zorder=7)
 
     verdict = "SUITABLE" if result.suitable else "NOT SUITABLE"
     util = f" · {result.utilization_pct:.0f}% used" if result.utilization_pct is not None else ""
     ax.set_title(f"{result.crane.name}  ·  reach {reach:.1f} m × lift {lift:.1f} m  →  {cap_txt}"
-                 f"  ({verdict}{util})", fontsize=10.5, color=color, fontweight="bold")
-    ax.set_xlim(0, w_px)
-    ax.set_ylim(h_px, 0)
+                 f"  ({verdict}{util})", fontsize=11, color=color, fontweight="bold")
+    ax.set_xlim(0, cw)
+    ax.set_ylim(ch, 0)
     ax.axis("off")
     fig.tight_layout()
     return fig
