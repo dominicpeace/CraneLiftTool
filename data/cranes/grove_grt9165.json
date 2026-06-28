@@ -713,5 +713,20 @@
         }
       ]
     }
-  ]
+  ],
+  "wr_chart": {
+    "image": "charts/grove_grt9165.png",
+    "page": 6,
+    "units": "metric",
+    "rx": [
+      -6.5884,
+      880.35
+    ],
+    "hy": [
+      -6.6041,
+      1125.25
+    ],
+    "r_max": 90.0,
+    "h_max": 90.0
+  }
 }

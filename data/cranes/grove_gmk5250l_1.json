@@ -1351,6 +1351,7 @@
   "wr_chart": {
     "image": "charts/grove_gmk5250l_1.png",
     "page": 16,
+    "units": "metric",
     "rx": [
       -11.8792,
       939.57

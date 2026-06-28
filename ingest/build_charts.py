@@ -1,16 +1,17 @@
 """Render each crane's working-range diagram to a PNG and store axis calibration in its JSON.
 
-For every crane whose source PDF is available locally, find the telescopic-boom "Working range"
+For every crane whose source PDF is available locally, find the metric "Working range" diagram
 page, auto-calibrate the axes from the integer tick labels (radius on X, height on Y), render the
 page to data/charts/<slug>.png, and write a ``wr_chart`` block into the crane JSON:
 
     "wr_chart": {"image": "charts/<slug>.png",
+                 "units": "metric",
                  "rx": [m, b],   # pixel_x = m*radius + b
                  "hy": [m, b],   # pixel_y = m*height + b
                  "r_max": <largest radius tick>, "h_max": <largest height tick>}
 
 The app overlays the reach/lift crosshair on the real chart using this calibration. Cranes without
-a detectable telescopic working-range page are skipped (they keep the reconstructed chart).
+a detectable, calibratable working-range page are skipped (they keep the reconstructed chart).
 
 Run (needs requirements-ingest.txt):  python ingest/build_charts.py
 """
@@ -44,13 +45,32 @@ def find_pdf(name: str) -> Path | None:
     return None
 
 
-def find_wr_page(ppdf):
-    """First telescopic-boom 'Working range' page (skip jib/extension variants). pdfplumber pdf."""
+def find_wr_page(ppdf, target_boom: float | None = None):
+    """Best metric 'Working range' diagram page (pdfplumber pdf), or (None, None).
+
+    Strict first (telescopic-boom page with no jib/extension, that calibrates); then a relaxed pass
+    over any 'working range'/'arbeitsbereich' page that calibrates, preferring non-jib pages and the
+    one whose calibrated height axis best matches the crane's max boom (this separates a main-boom
+    diagram from jib/extension variants). Note many main-boom range diagrams also list extension
+    options, so an EXCLUDE keyword alone is only a tie-breaker, never an outright rejection.
+    """
     for i, pg in enumerate(ppdf.pages):
         t = (pg.extract_text() or "").lower()
         if "working range" in t and "telescopic boom" in t and not any(k in t for k in EXCLUDE):
-            return i, pg
-    return None, None
+            if calibrate(pg):
+                return i, pg
+    cands = []
+    for i, pg in enumerate(ppdf.pages):
+        t = (pg.extract_text() or "").lower()
+        if "working range" in t or "arbeitsbereich" in t:
+            cal = calibrate(pg)
+            if cal:
+                cands.append((i, pg, any(k in t for k in EXCLUDE), cal[3]))  # cal[3] = h_max
+    if not cands:
+        return None, None
+    pool = [c for c in cands if not c[2]] or cands
+    best = min(pool, key=lambda c: abs(c[3] - target_boom) if target_boom else c[3])
+    return best[0], best[1]
 
 
 def _fit_axis(groups):
@@ -117,7 +137,7 @@ def main() -> int:
             print(f"  skip {data['model']:<12} (no local PDF: {pdf_name or '-'})")
             continue
         with pdfplumber.open(str(pdf_path)) as ppdf:
-            pi, pg = find_wr_page(ppdf)
+            pi, pg = find_wr_page(ppdf, data.get("max_boom_m"))
             cal = calibrate(pg) if pg is not None else None
         if cal is None:
             if had_chart:
@@ -129,7 +149,7 @@ def main() -> int:
         img = CHARTS / f"{jpath.stem}.png"
         with fitz.open(str(pdf_path)) as fpdf:
             fpdf[pi].get_pixmap(dpi=DPI).save(str(img))
-        data["wr_chart"] = {"image": f"charts/{img.name}", "page": pi + 1,
+        data["wr_chart"] = {"image": f"charts/{img.name}", "page": pi + 1, "units": "metric",
                             "rx": [round(rx[0], 4), round(rx[1], 2)],
                             "hy": [round(hy[0], 4), round(hy[1], 2)],
                             "r_max": r_max, "h_max": h_max}

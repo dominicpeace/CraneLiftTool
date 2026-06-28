@@ -589,5 +589,20 @@
         }
       ]
     }
-  ]
+  ],
+  "wr_chart": {
+    "image": "charts/grove_grt655l.png",
+    "page": 13,
+    "units": "metric",
+    "rx": [
+      -13.5153,
+      897.06
+    ],
+    "hy": [
+      -13.4811,
+      1219.54
+    ],
+    "r_max": 50.0,
+    "h_max": 55.0
+  }
 }

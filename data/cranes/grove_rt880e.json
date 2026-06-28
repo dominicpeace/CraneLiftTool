@@ -5,7 +5,7 @@
   "max_capacity_t": 72.6,
   "max_boom_m": 39.0,
   "counterweight": "18,000 lb counterweight, 100% / 360 deg (as charted)",
-  "source_pdf": "Grove-RT880E-Prdouct-Guide-imperial.pdf",
+  "source_pdf": "RT880E-metric.pdf",
   "notes": "Main-boom chart, page 9. Tip heights APPROXIMATE (from max boom angle).",
   "data_status": "EXTRACTED from source PDF via pdfplumber (capacities from chart text; occasional upward-misread points dropped; tip heights approximate). Spot-check advised.",
   "boom_configs": [
@@ -453,5 +453,20 @@
         }
       ]
     }
-  ]
+  ],
+  "wr_chart": {
+    "image": "charts/grove_rt880e.png",
+    "page": 8,
+    "units": "metric",
+    "rx": [
+      -12.0548,
+      1006.55
+    ],
+    "hy": [
+      -12.0548,
+      1292.4
+    ],
+    "r_max": 70.0,
+    "h_max": 75.0
+  }
 }

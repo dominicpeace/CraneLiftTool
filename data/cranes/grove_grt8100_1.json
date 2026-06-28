@@ -623,6 +623,7 @@
   "wr_chart": {
     "image": "charts/grove_grt8100_1.png",
     "page": 10,
+    "units": "metric",
     "rx": [
       -10.7488,
       934.61

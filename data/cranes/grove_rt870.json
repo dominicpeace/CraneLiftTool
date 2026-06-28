@@ -5,7 +5,7 @@
   "max_capacity_t": 63.5,
   "max_boom_m": 38.1,
   "counterweight": "11,500 lb counterweight, 100% / 360 deg (as charted)",
-  "source_pdf": "Grove-RT870.pdf",
+  "source_pdf": "RT870-metric.pdf",
   "notes": "Main-boom chart, page 6. Tip heights APPROXIMATE (from max boom angle).",
   "data_status": "EXTRACTED from source PDF via pdfplumber (capacities from chart text; occasional upward-misread points dropped; tip heights approximate). Spot-check advised.",
   "boom_configs": [
@@ -413,5 +413,20 @@
         }
       ]
     }
-  ]
+  ],
+  "wr_chart": {
+    "image": "charts/grove_rt870.png",
+    "page": 3,
+    "units": "metric",
+    "rx": [
+      -13.2131,
+      905.09
+    ],
+    "hy": [
+      -13.2375,
+      1257.12
+    ],
+    "r_max": 50.0,
+    "h_max": 60.0
+  }
 }
