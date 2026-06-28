@@ -10,7 +10,7 @@ import pandas as pd
 import streamlit as st
 
 from crane_tool.data_loader import CraneDataError, load_library
-from crane_tool.chart_plot import plot_duty_point, plot_load_chart
+from crane_tool.chart_plot import plot_range_chart
 from crane_tool.models import LiftRequest
 from crane_tool.selector import (
     SAFE_UTILIZATION,
@@ -81,14 +81,17 @@ def main() -> None:
     radius = working_radius(x, y)
     height = required_height(req)
 
-    c1, c2, c3 = st.columns(3)
+    c1, c2, c3, c4 = st.columns(4)
     c1.metric("Working radius √(X²+Y²)", f"{radius:.2f} m")
     c2.metric("Required tip height", f"{height:.2f} m")
-    c3.metric("Load (incl. gear)", f"{load:.1f} t")
+    c3.metric("Vertical lift", f"{lift:.2f} m")
+    c4.metric("Load (incl. gear)", f"{load:.1f} t")
 
-    # ---- Recommendation ----
+    # ---- First pass: all cranes, suitable ones first ----
     rec = recommend(cranes, req)
-    st.subheader("Recommended crane")
+    results = evaluate_all(cranes, req)
+
+    st.subheader("First pass — all cranes at this lift")
     if rec is None:
         st.error(
             "No crane in the library is suitable for this lift "
@@ -96,49 +99,15 @@ def main() -> None:
             "Consider a larger crane or revisit the lift geometry."
         )
     else:
-        rc1, rc2, rc3 = st.columns([2, 1, 1])
-        rc1.success(f"**{rec.crane.name}** — {rec.crane.type}")
-        rc2.metric("Capacity at radius", f"{rec.capacity_t:.1f} t")
-        rc3.metric("Utilization", f"{rec.utilization_pct:.0f} %")
-        st.caption(f"{rec.reason}  Boom length used ≈ {rec.boom_length_m:.0f} m.")
-
-    # ---- Model selection (override) ----
-    st.subheader("Load chart")
-    names = [c.name for c in cranes]
-    default_name = rec.crane.name if rec is not None else names[-1]
-    default_idx = names.index(default_name)
-    chosen_name = st.selectbox(
-        "Crane model (override the recommendation to compare)",
-        names,
-        index=default_idx,
-    )
-    chosen = next(c for c in cranes if c.name == chosen_name)
-    result = evaluate_crane(chosen, req)
-
-    if result.suitable:
-        st.success(result.reason, icon="✅")
-    else:
-        st.error(result.reason, icon="⛔")
-
-    if result.capacity_t is not None:
-        st.pyplot(plot_load_chart(result, req), use_container_width=False)
-        st.markdown("**Duty point on the working-range diagram**")
-        st.pyplot(plot_duty_point(result, req), use_container_width=False)
-    else:
-        st.info(
-            "No load-chart curve to plot for this crane at the requested radius/height "
-            f"({result.reason})"
+        st.success(
+            f"Recommended: **{rec.crane.name}** ({rec.crane.type}) — "
+            f"{rec.capacity_t:.1f} t capacity, {rec.utilization_pct:.0f}% used, "
+            f"boom ≈ {rec.boom_length_m:.0f} m.",
+            icon="✅",
         )
-        if chosen.data_status:
-            st.caption(f"Data status: {chosen.data_status}")
 
-    if chosen.data_status:
-        st.caption(f"ℹ️ {chosen.name} data status: {chosen.data_status}")
-
-    # ---- Comparison table ----
-    st.subheader("All cranes at this lift")
     rows = []
-    for r in evaluate_all(cranes, req):
+    for r in results:
         rows.append(
             {
                 "Crane": r.crane.name,
@@ -150,10 +119,44 @@ def main() -> None:
                 else round(r.utilization_pct, 0),
                 "Boom used (m)": None if r.boom_length_m is None else round(r.boom_length_m, 0),
                 "Verdict": "✅ Suitable" if r.suitable else "⛔ Not suitable",
+                "_ok": r.suitable,
             }
         )
-    df = pd.DataFrame(rows).sort_values("Max capacity (t)").reset_index(drop=True)
+    # Suitable cranes first, then by max capacity.
+    df = (
+        pd.DataFrame(rows)
+        .sort_values(["_ok", "Max capacity (t)"], ascending=[False, True])
+        .drop(columns="_ok")
+        .reset_index(drop=True)
+    )
     st.dataframe(df, use_container_width=True, hide_index=True)
+
+    # ---- Per-model load chart with crosshair lines ----
+    st.divider()
+    st.subheader("Load chart for a selected model")
+    st.caption(
+        "Pick a model to see its working-range chart. The red lines are your reach (vertical) and "
+        "lift (horizontal); read the rated capacity where they meet a boom arc — same as checking "
+        "the PDF chart by hand."
+    )
+    names = [c.name for c in cranes]
+    default_name = rec.crane.name if rec is not None else names[-1]
+    chosen_name = st.selectbox("Crane model", names, index=names.index(default_name))
+    chosen = next(c for c in cranes if c.name == chosen_name)
+    result = evaluate_crane(chosen, req)
+
+    if result.suitable:
+        st.success(result.reason, icon="✅")
+    else:
+        st.error(result.reason, icon="⛔")
+
+    if result.capacity_t is not None:
+        st.pyplot(plot_range_chart(result, req), use_container_width=False)
+    else:
+        st.info(f"No chart point for this crane at the requested radius/height ({result.reason})")
+
+    if chosen.data_status:
+        st.caption(f"ℹ️ {chosen.name} data status: {chosen.data_status}")
 
 
 if __name__ == "__main__":
