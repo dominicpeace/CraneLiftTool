@@ -17,9 +17,6 @@ from matplotlib.figure import Figure
 
 from .models import LiftRequest, LiftResult
 
-# Approximate boom-pivot height above ground (m) for the height geometry of the arcs.
-PIVOT_HEIGHT_M = 3.0
-
 
 def geometry_sketch(reach_m: float, lift_m: float) -> Figure:
     """Small elevation sketch defining horizontal reach, vertical lift and working radius."""
@@ -95,7 +92,7 @@ def plot_real_chart(result: LiftResult, req: LiftRequest, image_path: str) -> Fi
     ax.plot([x_reach, x_reach], [y_base, y_lift], color="#d32f2f", linewidth=2.0, zorder=5)
     ax.plot([x_reach, x_left], [y_lift, y_lift], color="#d32f2f", linewidth=2.0, zorder=5)
     ax.scatter([x_reach], [y_lift], s=140, color=color, edgecolors="black", linewidths=1.3, zorder=6)
-    cap_txt = f"{result.capacity_t:.1f} t" if result.capacity_t is not None else "out of chart"
+    cap_txt = f"{result.capacity_t:.1f} t" if result.capacity_t is not None else "out of reach"
     ax.annotate(f"  {cap_txt}", (x_reach, y_lift), color=color, fontsize=15, fontweight="bold",
                 zorder=7)
 
@@ -125,7 +122,7 @@ def plot_range_chart(result: LiftResult, req: LiftRequest) -> Figure:
 
     fig, ax = plt.subplots(figsize=(7.5, 6.0))
     max_r = max(radius, 1.0)
-    max_h = max(lift_h, PIVOT_HEIGHT_M)
+    max_h = max(lift_h, 1.0)
 
     for cfg in crane.boom_configs:
         length = cfg.boom_length_m
@@ -134,7 +131,7 @@ def plot_range_chart(result: LiftResult, req: LiftRequest) -> Figure:
             if p.radius_m >= length:  # radius beyond boom length is geometrically impossible
                 continue
             rs.append(p.radius_m)
-            hs.append(PIVOT_HEIGHT_M + math.sqrt(length * length - p.radius_m * p.radius_m))
+            hs.append(math.sqrt(length * length - p.radius_m * p.radius_m))
             caps.append(p.capacity_t)
         if len(rs) < 2:
             continue
@@ -157,7 +154,7 @@ def plot_range_chart(result: LiftResult, req: LiftRequest) -> Figure:
     ax.plot([radius, max_r * 1.12], [lift_h, lift_h], color="#d32f2f", linewidth=1.7, zorder=6)
     ax.scatter([radius], [lift_h], s=90, color=color, edgecolors="black", linewidths=1.0, zorder=7)
 
-    cap_txt = f"{result.capacity_t:.1f} t" if result.capacity_t is not None else "out of chart"
+    cap_txt = f"{result.capacity_t:.1f} t" if result.capacity_t is not None else "out of reach"
     ax.annotate(f"  {cap_txt}", (radius, lift_h), xytext=(6, 6), textcoords="offset points",
                 fontsize=11, fontweight="bold", color=color, zorder=8)
 

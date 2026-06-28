@@ -160,18 +160,27 @@ def main() -> None:
     else:
         st.error(result.reason, icon="⛔")
 
-    if result.capacity_t is not None:
-        cal = chosen.wr_chart
-        img = (DATA_ROOT / cal["image"]) if cal else None
-        if cal and img is not None and img.exists():
-            st.pyplot(plot_real_chart(result, req, str(img)), use_container_width=True)
+    cal = chosen.wr_chart
+    img = (DATA_ROOT / cal["image"]) if cal else None
+    has_real = bool(cal and img is not None and img.exists())
+    # The duty point can be drawn on the real chart only if it falls within the charted axes.
+    on_chart = has_real and result.radius_m <= cal["r_max"] and req.vertical_lift_m <= cal["h_max"]
+
+    if has_real and (result.capacity_t is not None or on_chart):
+        st.pyplot(plot_real_chart(result, req, str(img)), use_container_width=True)
+        if result.capacity_t is None:
+            st.caption(
+                "Duty point shown on the actual manufacturer working-range chart — it falls beyond "
+                "the longest boom's reach, so there is no rated capacity here. Verify against the PDF."
+            )
+        else:
             st.caption(
                 "Actual manufacturer working-range chart with your reach (vertical) and lift "
                 "(horizontal) lines — read the rated capacity where they meet a boom arc."
             )
-        else:
-            st.pyplot(plot_range_chart(result, req), use_container_width=False)
-            st.caption("Reconstructed chart (no source diagram available for this model).")
+    elif result.capacity_t is not None:
+        st.pyplot(plot_range_chart(result, req), use_container_width=False)
+        st.caption("Reconstructed chart (no source diagram available for this model).")
     else:
         st.info(f"No chart point for this crane at the requested radius/height ({result.reason})")
 

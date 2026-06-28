@@ -10,10 +10,6 @@ from .models import CraneModel, LiftRequest, LiftResult
 # A crane is suitable only if the load stays strictly below this fraction of rated capacity.
 SAFE_UTILIZATION = 0.90
 
-# Approximate boom-pivot height (m) used to infer which boom length places the hook at a given
-# (radius, height) — i.e. to read capacity the way a working-range chart is read by hand.
-PIVOT_HEIGHT_M = 3.0
-
 
 def horizontal_reach(x_reach_m: float, y_reach_m: float) -> float:
     """Plan distance from the slew centre to the load = sqrt(X^2 + Y^2).
@@ -43,14 +39,15 @@ def best_capacity(
     """Capacity read the way a working-range load chart is read by hand.
 
     The relevant boom is the one whose tip sits at the duty point — its length is approximately
-    ``sqrt(radius^2 + (height - pivot)^2)`` — evaluated at the working radius. Returns
-    ``(capacity_t, boom_length_m)``, or ``(None, None)`` if the radius is off the chart or the
-    height cannot be reached at that radius.
+    ``sqrt(radius^2 + height^2)``, the straight-line distance from the boom foot to the hook.
+    The chart's height axis already accounts for the real boom-pivot height, so the full required
+    height is used here with no assumed pivot offset. Returns ``(capacity_t, boom_length_m)``, or
+    ``(None, None)`` if the radius is off the chart or the height cannot be reached at that radius.
     """
-    # Distance from the boom pivot to the duty point. The boom must span at least this to place the
-    # tip at (radius, height); a shorter boom simply cannot reach that height at that radius, however
-    # far its capacity table extends.
-    needed_len = math.hypot(radius_m, max(height_m - PIVOT_HEIGHT_M, 0.0))
+    # Straight-line distance from the boom foot to the duty point. The boom must span at least this
+    # to place the tip at (radius, height); a shorter boom simply cannot reach that height at that
+    # radius, however far its capacity table extends.
+    needed_len = math.hypot(radius_m, height_m)
     cands = [
         cfg
         for cfg in crane.boom_configs
