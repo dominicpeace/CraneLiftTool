@@ -10,12 +10,13 @@ import pandas as pd
 import streamlit as st
 
 from crane_tool.data_loader import CraneDataError, load_library
-from crane_tool.chart_plot import plot_range_chart
+from crane_tool.chart_plot import geometry_sketch, plot_range_chart
 from crane_tool.models import LiftRequest
 from crane_tool.selector import (
     SAFE_UTILIZATION,
     evaluate_all,
     evaluate_crane,
+    horizontal_reach,
     recommend,
     required_height,
     working_radius,
@@ -73,18 +74,25 @@ def main() -> None:
         )
 
     cranes = [c for c in full_library if c.type in chosen_types] or full_library
-    st.caption(f"Considering **{len(cranes)}** crane(s) of {len(full_library)} in the library.")
 
     req = LiftRequest(
         x_reach_m=x, y_reach_m=y, vertical_lift_m=lift, load_t=load, headroom_m=headroom
     )
-    radius = working_radius(x, y)
+    reach = horizontal_reach(x, y)          # load-chart radius = sqrt(X^2 + Y^2)
+    work_radius = working_radius(reach, lift)  # 3-D slant distance = sqrt(reach^2 + lift^2)
     height = required_height(req)
 
+    # Geometry definitions sketch in the sidebar to avoid reach/radius confusion.
+    with st.sidebar:
+        st.divider()
+        st.caption("Geometry")
+        st.pyplot(geometry_sketch(reach, lift), use_container_width=True)
+        st.caption(f"Considering {len(cranes)} of {len(full_library)} cranes (type filter).")
+
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Working radius √(X²+Y²)", f"{radius:.2f} m")
-    c2.metric("Required tip height", f"{height:.2f} m")
-    c3.metric("Vertical lift", f"{lift:.2f} m")
+    c1.metric("Horizontal reach √(X²+Y²)", f"{reach:.2f} m")
+    c2.metric("Vertical lift (Z)", f"{lift:.2f} m")
+    c3.metric("Working radius √(reach²+lift²)", f"{work_radius:.2f} m")
     c4.metric("Load (incl. gear)", f"{load:.1f} t")
 
     # ---- First pass: all cranes, suitable ones first ----

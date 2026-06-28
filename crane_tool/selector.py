@@ -15,9 +15,21 @@ SAFE_UTILIZATION = 0.90
 PIVOT_HEIGHT_M = 3.0
 
 
-def working_radius(x_reach_m: float, y_reach_m: float) -> float:
-    """Combine horizontal X and Y reach into a working radius R = sqrt(X^2 + Y^2)."""
+def horizontal_reach(x_reach_m: float, y_reach_m: float) -> float:
+    """Plan distance from the slew centre to the load = sqrt(X^2 + Y^2).
+
+    This is the radius a crane load chart is read against (the load-chart radius).
+    """
     return math.hypot(x_reach_m, y_reach_m)
+
+
+def working_radius(horizontal_reach_m: float, vertical_lift_m: float) -> float:
+    """3-D slant distance from the slew centre to the load = sqrt(reach^2 + lift^2).
+
+    (User's 'working radius'.) Informational; the load chart itself is read against the horizontal
+    reach, not this value.
+    """
+    return math.hypot(horizontal_reach_m, vertical_lift_m)
 
 
 def required_height(req: LiftRequest) -> float:
@@ -54,7 +66,7 @@ def best_capacity(
 
 def evaluate_crane(crane: CraneModel, req: LiftRequest) -> LiftResult:
     """Evaluate a single crane against a lift request."""
-    radius = working_radius(req.x_reach_m, req.y_reach_m)
+    radius = horizontal_reach(req.x_reach_m, req.y_reach_m)
     height = required_height(req)
     capacity, boom = best_capacity(crane, radius, height)
 
@@ -64,7 +76,7 @@ def evaluate_crane(crane: CraneModel, req: LiftRequest) -> LiftResult:
         if not reaches_height:
             reason = f"Cannot reach required height of {height:.1f} m."
         else:
-            reason = f"Working radius {radius:.1f} m is outside the load chart."
+            reason = f"Horizontal reach {radius:.1f} m is outside the load chart."
         return LiftResult(
             crane=crane,
             radius_m=radius,

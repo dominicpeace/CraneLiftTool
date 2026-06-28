@@ -13,6 +13,7 @@ from crane_tool.selector import (
     SAFE_UTILIZATION,
     best_capacity,
     evaluate_crane,
+    horizontal_reach,
     recommend,
     required_height,
     working_radius,
@@ -45,12 +46,17 @@ def _toy_crane(name="Toy 50", max_cap=50.0, tip=20.0):
 
 # --- working radius -------------------------------------------------------
 
-def test_working_radius_pythagorean():
-    assert working_radius(3.0, 4.0) == pytest.approx(5.0)
+def test_horizontal_reach_pythagorean():
+    assert horizontal_reach(3.0, 4.0) == pytest.approx(5.0)
 
 
-def test_working_radius_zero():
-    assert working_radius(0.0, 0.0) == 0.0
+def test_horizontal_reach_zero():
+    assert horizontal_reach(0.0, 0.0) == 0.0
+
+
+def test_working_radius_is_3d_slant():
+    # working radius combines horizontal reach and vertical lift
+    assert working_radius(4.0, 3.0) == pytest.approx(5.0)
 
 
 def test_required_height_adds_headroom():
@@ -152,7 +158,7 @@ def test_library_charts_are_monotonic_decreasing():
 def test_library_realistic_lift_recommends_something():
     cranes = load_library(DATA_DIR)
     req = LiftRequest(5.0, 3.0, vertical_lift_m=8.0, load_t=40.0, headroom_m=1.5)
-    assert working_radius(5.0, 3.0) == pytest.approx(math.hypot(5.0, 3.0))
+    assert horizontal_reach(5.0, 3.0) == pytest.approx(math.hypot(5.0, 3.0))
     rec = recommend(cranes, req)
     assert rec is not None
     assert rec.suitable

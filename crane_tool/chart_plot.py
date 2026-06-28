@@ -21,6 +21,32 @@ from .models import LiftRequest, LiftResult
 PIVOT_HEIGHT_M = 3.0
 
 
+def geometry_sketch(reach_m: float, lift_m: float) -> Figure:
+    """Small elevation sketch defining horizontal reach, vertical lift and working radius."""
+    r = max(reach_m, 0.1)
+    h = max(lift_m, 0.1)
+    fig, ax = plt.subplots(figsize=(3.2, 2.4))
+    # Crane at origin; load at (reach, lift).
+    ax.plot([0, r], [0, 0], color="#888", linewidth=1.2)            # horizontal reach
+    ax.plot([r, r], [0, h], color="#888", linewidth=1.2)            # vertical lift
+    ax.plot([0, r], [0, h], color="#d32f2f", linewidth=1.8)         # working radius (slant)
+    ax.scatter([0], [0], s=40, color="#1f4e79", zorder=5)
+    ax.scatter([r], [h], s=60, color="#2e7d32", zorder=5)
+    ax.annotate("crane\ncentre", (0, 0), xytext=(4, 6), textcoords="offset points", fontsize=7)
+    ax.annotate("load", (r, h), xytext=(4, 2), textcoords="offset points", fontsize=7,
+                color="#2e7d32")
+    ax.text(r / 2, -0.12 * h, "horizontal reach\n= √(X²+Y²)", ha="center", va="top", fontsize=7)
+    ax.text(r * 1.02, h / 2, "vertical\nlift (Z)", ha="left", va="center", fontsize=7)
+    ax.text(r * 0.45, h * 0.62, "working radius\n= √(reach²+lift²)", ha="center", va="bottom",
+            fontsize=7, color="#d32f2f", rotation=0)
+    ax.set_xlim(-0.15 * r, r * 1.35)
+    ax.set_ylim(-0.35 * h, h * 1.25)
+    ax.set_aspect("equal", adjustable="box")
+    ax.axis("off")
+    fig.tight_layout()
+    return fig
+
+
 def plot_range_chart(result: LiftResult, req: LiftRequest) -> Figure:
     """Working-range diagram for one crane with the lift's crosshair lines.
 
@@ -79,7 +105,7 @@ def plot_range_chart(result: LiftResult, req: LiftRequest) -> Figure:
         f"  ({verdict}{util})",
         fontsize=10.5, color=color, fontweight="bold",
     )
-    ax.set_xlabel("Working radius (m)")
+    ax.set_xlabel("Horizontal reach (m)  — load-chart radius")
     ax.set_ylabel("Hook height (m)")
     ax.grid(True, linestyle=":", alpha=0.55)
     ax.set_xlim(max_r * 1.15, 0)        # radius high→low (left→right), matching a manufacturer chart
