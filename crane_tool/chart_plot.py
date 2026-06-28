@@ -23,7 +23,7 @@ def plot_load_chart(result: LiftResult, req: LiftRequest) -> Figure:
     green (suitable) or red (not suitable).
     """
     crane = result.crane
-    fig, ax = plt.subplots(figsize=(8, 5))
+    fig, ax = plt.subplots(figsize=(6.2, 3.7))
 
     # All boom-length curves (faint context).
     for cfg in crane.boom_configs:
@@ -135,7 +135,7 @@ def plot_duty_point(result: LiftResult, req: LiftRequest) -> Figure:
     color = "#2e7d32" if result.suitable else "#c62828"
     crane = result.crane
 
-    fig, ax = plt.subplots(figsize=(9, 6.5))
+    fig, ax = plt.subplots(figsize=(6.0, 4.4))
     max_h = max(tip_h, load_h, PIVOT_HEIGHT_M)
     max_r = max(radius, 1.0)
 

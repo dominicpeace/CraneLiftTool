@@ -121,9 +121,9 @@ def main() -> None:
         st.error(result.reason, icon="⛔")
 
     if result.capacity_t is not None:
-        st.pyplot(plot_load_chart(result, req))
+        st.pyplot(plot_load_chart(result, req), use_container_width=False)
         st.markdown("**Duty point on the working-range diagram**")
-        st.pyplot(plot_duty_point(result, req))
+        st.pyplot(plot_duty_point(result, req), use_container_width=False)
     else:
         st.info(
             "No load-chart curve to plot for this crane at the requested radius/height "
