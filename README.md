@@ -86,8 +86,14 @@ PNGs but never overwrites that calibration.
 **Metric only.** Models for which only an imperial guide (feet / US tons) was available, or whose
 chart could not be read at all (scanned image, only an extension-boom diagram), were removed rather
 than shipped with an imperial or unreadable chart: GMK7550, GMK5150XL, GMK5150XLe, RT875E, RT9100.
-GRT540/GRT765/GRT780 were likewise excluded earlier. GRT9165 parsed below its 150 t rating
-(auto-selected page is likely a reduced configuration) — flagged in its `data_status`.
+GRT540/GRT765/GRT780 were likewise excluded earlier.
+
+**Headline `max_capacity_t`** is each crane's official maximum rated capacity, read from the metric
+product-guide cover (e.g. GMK3060L-1 = 60 t), not inferred from the working-range chart — the chart
+often starts at a larger radius than the rated peak, so deriving it from chart points understated
+several models. The per-duty-point capacity used for suitability still comes from the load-chart
+points in `boom_configs`; for GRT9165 those points come from a reduced-configuration page (its peak
+duty-point capacity reads below the 150 t headline), flagged in its `data_status`.
 
 > **Data status:** Capacities are read from the standard main-boom, 100% counterweight, 360°
 > chart; tip heights are **approximate**, and a few upward-misread points are auto-dropped. Always

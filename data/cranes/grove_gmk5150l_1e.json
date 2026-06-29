@@ -2,7 +2,7 @@
   "manufacturer": "Grove",
   "model": "GMK5150L-1e",
   "type": "All Terrain",
-  "max_capacity_t": 106.0,
+  "max_capacity_t": 150.0,
   "max_boom_m": 60.0,
   "counterweight": "as charted",
   "source_pdf": "GMK5150L-1e-metric.pdf",

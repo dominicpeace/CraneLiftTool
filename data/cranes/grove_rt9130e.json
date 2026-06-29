@@ -2,7 +2,7 @@
   "manufacturer": "Grove",
   "model": "RT9130E",
   "type": "Rough Terrain",
-  "max_capacity_t": 118.0,
+  "max_capacity_t": 120.0,
   "max_boom_m": 49.0,
   "counterweight": "Full counterweight, fully extended outriggers (as-charted)",
   "source_pdf": "RT9130E-metric.pdf",

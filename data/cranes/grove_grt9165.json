@@ -2,7 +2,7 @@
   "manufacturer": "Grove",
   "model": "GRT9165",
   "type": "Rough Terrain",
-  "max_capacity_t": 109.5,
+  "max_capacity_t": 150.0,
   "max_boom_m": 62.5,
   "counterweight": "25800 kg counterweight, 360 deg (as charted)",
   "source_pdf": "GRT9165-metric.pdf",

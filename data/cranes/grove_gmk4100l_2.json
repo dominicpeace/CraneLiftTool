@@ -2,7 +2,7 @@
   "manufacturer": "Grove",
   "model": "GMK4100L-2",
   "type": "All Terrain",
-  "max_capacity_t": 84.0,
+  "max_capacity_t": 100.0,
   "max_boom_m": 60.0,
   "counterweight": "26,0 t counterweight, 360 deg (as charted)",
   "source_pdf": "GMK4100L-2-metric.pdf",

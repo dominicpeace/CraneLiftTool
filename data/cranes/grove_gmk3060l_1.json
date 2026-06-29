@@ -2,7 +2,7 @@
   "manufacturer": "Grove",
   "model": "GMK3060L-1",
   "type": "All Terrain",
-  "max_capacity_t": 50.0,
+  "max_capacity_t": 60.0,
   "max_boom_m": 48.0,
   "counterweight": "13,5 t counterweight, 360 deg (as charted)",
   "source_pdf": "GMK3060L-1-metric.pdf",

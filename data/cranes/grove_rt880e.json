@@ -2,7 +2,7 @@
   "manufacturer": "Grove",
   "model": "RT880E",
   "type": "Rough Terrain",
-  "max_capacity_t": 72.6,
+  "max_capacity_t": 75.0,
   "max_boom_m": 39.0,
   "counterweight": "18,000 lb counterweight, 100% / 360 deg (as charted)",
   "source_pdf": "RT880E-metric.pdf",
