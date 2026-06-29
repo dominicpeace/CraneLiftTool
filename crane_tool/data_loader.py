@@ -67,6 +67,12 @@ def parse_crane(raw: dict, ctx: str = "<crane>") -> CraneModel:
             notes=str(raw.get("notes", "")),
             data_status=str(raw.get("data_status", "")),
             wr_chart=raw.get("wr_chart"),
+            outrigger_width_mm=(
+                float(raw["outrigger_width_mm"]) if raw.get("outrigger_width_mm") is not None else None
+            ),
+            tail_swing_radius_mm=(
+                float(raw["tail_swing_radius_mm"]) if raw.get("tail_swing_radius_mm") is not None else None
+            ),
         )
     except (KeyError, TypeError, ValueError) as exc:
         raise CraneDataError(f"{ctx}: bad crane fields ({exc})") from exc

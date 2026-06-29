@@ -14,6 +14,7 @@ import matplotlib
 matplotlib.use("Agg")  # headless backend; Streamlit renders the Figure object directly.
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
+from matplotlib.patches import Arc, Rectangle
 
 from .models import LiftRequest, LiftResult
 
@@ -109,12 +110,93 @@ def geometry_sketch(x_m: float, y_m: float, lift_m: float) -> Figure:
     return fig
 
 
+def setup_space_sketch(crane) -> Figure:
+    """Plan-view schematic of the crane's minimum set-up space.
+
+    ``min setup space = ½ × outrigger width + tail-swing radius`` — the clear lateral footprint
+    from the outrigger pad on one side of the slew centre to the tail-swing extreme on the other.
+    Draws the outrigger base (to ±½W), the tail-swing circle (radius R) and the resulting span,
+    using the selected crane's actual dimensions. Falls back to a labelled placeholder when the
+    dimensions are not recorded for this crane.
+    """
+    fig, ax = plt.subplots(figsize=(5.2, 3.3))
+    have = crane.outrigger_width_mm is not None and crane.tail_swing_radius_mm is not None
+
+    if not have:
+        ax.text(0.5, 0.62, "Set-up dimensions not recorded\nfor this crane yet.",
+                ha="center", va="center", fontsize=10, color="#777", transform=ax.transAxes)
+        ax.text(0.5, 0.30, "min setup space = ½ × base width + tail-swing radius",
+                ha="center", va="center", fontsize=8.5, color="#999", transform=ax.transAxes)
+        ax.axis("off")
+        fig.tight_layout()
+        return fig
+
+    W = crane.outrigger_width_mm / 1000.0          # outrigger lateral span (m)
+    R = crane.tail_swing_radius_mm / 1000.0         # tail-swing radius (m)
+    hw = W / 2.0
+    S = hw + R                                       # min set-up space
+
+    # Tail-swing circle (superstructure rear sweep) around the slew centre at the origin.
+    circ = plt.Circle((0, 0), R, fill=True, color="#1f77b4", alpha=0.10, zorder=0)
+    ax.add_patch(circ)
+    ax.add_patch(plt.Circle((0, 0), R, fill=False, color="#1f77b4", lw=1.3,
+                            linestyle=(0, (5, 3)), zorder=2))
+
+    # Carrier / superstructure body (representative), and the outrigger beams + pads at ±½W.
+    body_l = min(R * 0.9, hw * 1.1)
+    ax.add_patch(plt.Rectangle((-body_l, -0.18 * R), 2 * body_l, 0.36 * R,
+                               color="#9aa0a6", alpha=0.5, zorder=1))
+    pad = 0.07 * S
+    for sx in (-1, 1):
+        ax.plot([0, sx * hw], [0, 0], color="#555", lw=2.2, zorder=3)
+        ax.add_patch(plt.Rectangle((sx * hw - pad / 2, -pad / 2), pad, pad,
+                                   color="#444", zorder=4))
+    ax.plot(0, 0, "+", color="black", ms=10, mew=1.6, zorder=5)  # slew centre
+
+    # Dimension line for the min set-up span: left outrigger pad (-½W) to tail-swing edge (+R).
+    y = -R * 1.28
+    ax.annotate("", xy=(R, y), xytext=(-hw, y),
+                arrowprops=dict(arrowstyle="<->", color="#d32f2f", lw=1.8))
+    ax.text((R - hw) / 2.0, y - 0.12 * R,
+            f"min setup space = ½ × {W:.2f} + {R:.2f} = {S:.2f} m",
+            ha="center", va="top", fontsize=9.5, color="#d32f2f", fontweight="bold")
+    # half-width and radius call-outs
+    ax.annotate("", xy=(0, R * 1.18), xytext=(0, 0),
+                arrowprops=dict(arrowstyle="->", color="#1f77b4", lw=1.2))
+    ax.text(0.04 * S, R * 0.6, f"tail-swing R = {R:.2f} m", fontsize=8, color="#1f77b4")
+    ax.annotate("", xy=(-hw, R * 0.16), xytext=(0, R * 0.16),
+                arrowprops=dict(arrowstyle="<->", color="#555", lw=1.0))
+    ax.text(-hw / 2, R * 0.22, f"½W = {hw:.2f} m", ha="center", fontsize=8, color="#444")
+
+    m = S * 1.18
+    ax.set_xlim(-m, m)
+    ax.set_ylim(-R * 1.55, R * 1.35)
+    ax.set_aspect("equal", adjustable="box")
+    ax.axis("off")
+    fig.tight_layout()
+    return fig
+
+
+def _draw_hook(ax, x: float, y: float, s: float, color: str = "#222222") -> None:
+    """Draw a small hook-block graphic at ``(x, y)`` in image pixel coords (y increases downward).
+
+    ``s`` is the block size in pixels. A short rope-block plus a hook throat (a near-closed ring
+    with a small opening) — enough to read as a load hook on the chart.
+    """
+    ax.add_patch(Rectangle((x - 0.55 * s, y), 1.1 * s, 0.7 * s, color=color, zorder=8))
+    cy = y + 0.7 * s + 0.8 * s
+    ax.add_patch(Arc((x, cy), 1.5 * s, 1.5 * s, angle=0, theta1=105, theta2=75,
+                     color=color, lw=2.2, zorder=8))
+
+
 def plot_real_chart(result: LiftResult, req: LiftRequest, image_path: str) -> Figure:
-    """Overlay the reach/lift crosshair on the crane's actual working-range diagram (PNG).
+    """Overlay a boom + load sketch on the crane's actual working-range diagram (PNG).
 
     Uses the axis calibration in ``result.crane.wr_chart`` (pixel = m*value + b for radius and
-    height) to place a vertical line at the working radius and a horizontal line at the lift height,
-    marking the duty point — exactly how the chart is read by hand.
+    height). The point the chart rates is the BOOM TIP at ``(reach, lift + headroom)`` — that is
+    where capacity is read. The hook block hangs the headroom distance below the tip on the hoist
+    rope, with the load underneath. We draw the boom from the foot up to the tip, the rope down to
+    the load, and a hook-block graphic — a more practical picture than a bare crosshair.
     """
     cal = result.crane.wr_chart
     rx, hy = cal["rx"], cal["hy"]
@@ -149,17 +231,23 @@ def plot_real_chart(result: LiftResult, req: LiftRequest, image_path: str) -> Fi
     fig, ax = plt.subplots(figsize=(9.0, 9.0 * ch / cw))
     ax.imshow(crop)
 
-    # Duty-point crosshair in cropped pixel coordinates.
-    x_reach = rx[0] * reach + rx[1] - left
-    y_lift = hy[0] * lift + hy[1] - top
-    y_base = y_h0 - top                          # height = 0
-    x_left = x_rmax - left                        # max-radius (left) edge of axes
-    ax.plot([x_reach, x_reach], [y_base, y_lift], color="#d32f2f", linewidth=2.0, zorder=5)
-    ax.plot([x_reach, x_left], [y_lift, y_lift], color="#d32f2f", linewidth=2.0, zorder=5)
-    ax.scatter([x_reach], [y_lift], s=140, color=color, edgecolors="black", linewidths=1.3, zorder=6)
+    # --- Boom + load sketch in cropped pixel coordinates -------------------------------------
+    def _to_px(rad: float, h: float) -> tuple[float, float]:
+        return rx[0] * rad + rx[1] - left, hy[0] * h + hy[1] - top
+
+    tip_h = result.required_height_m              # lift + headroom -> the rated boom-tip position
+    fx, fy = _to_px(0.0, 0.0)                       # boom foot (slew centre, at ground)
+    tx, ty = _to_px(reach, tip_h)                   # boom tip = duty point (where capacity is read)
+    lx, ly = _to_px(reach, lift)                    # load / hook block (hangs headroom below the tip)
+    gx, gy = _to_px(reach, 0.0)                      # ground point under the load (radius reference)
+
+    ax.plot([lx, gx], [ly, gy], color="#8a8a8a", lw=0.8, linestyle=(0, (3, 3)), zorder=4)  # radius ref
+    ax.plot([fx, tx], [fy, ty], color="#b5651d", lw=4.0, solid_capstyle="round", zorder=5)  # boom
+    ax.plot([tx, lx], [ty, ly], color="#222222", lw=1.3, zorder=5)                          # hoist rope
+    _draw_hook(ax, lx, ly, 0.024 * cw)                                                       # load hook
+    ax.scatter([tx], [ty], s=150, color=color, edgecolors="black", linewidths=1.4, zorder=7)  # tip dot
     cap_txt = f"{result.capacity_t:.1f} t" if result.capacity_t is not None else "out of reach"
-    ax.annotate(f"  {cap_txt}", (x_reach, y_lift), color=color, fontsize=15, fontweight="bold",
-                zorder=7)
+    ax.annotate(f"  {cap_txt}", (tx, ty), color=color, fontsize=15, fontweight="bold", zorder=9)
 
     # "Out of reach" (duty point beyond the boom's coverage, so there is no rated capacity at all)
     # is a distinct verdict from "Not suitable" (reachable, but the load exceeds the safe limit).

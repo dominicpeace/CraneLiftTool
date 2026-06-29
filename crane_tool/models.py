@@ -80,10 +80,24 @@ class CraneModel:
     notes: str = ""
     data_status: str = ""
     wr_chart: Optional[dict] = None  # real working-range chart image + axis calibration (if available)
+    # Set-up footprint dimensions (mm), read from the guide's dimensions diagram (optional).
+    outrigger_width_mm: Optional[float] = None   # fully-extended outrigger lateral span
+    tail_swing_radius_mm: Optional[float] = None  # rear (tail) rotating radius of the superstructure
 
     @property
     def name(self) -> str:
         return f"{self.manufacturer} {self.model}"
+
+    @property
+    def min_setup_space_mm(self) -> Optional[float]:
+        """Minimum set-up space = half the outrigger width + the tail-swing radius.
+
+        The clear lateral footprint from the outrigger pad on one side to the tail-swing extreme
+        on the other. ``None`` if either dimension is not recorded for this crane.
+        """
+        if self.outrigger_width_mm is None or self.tail_swing_radius_mm is None:
+            return None
+        return 0.5 * self.outrigger_width_mm + self.tail_swing_radius_mm
 
 
 @dataclass(frozen=True)

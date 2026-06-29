@@ -6,13 +6,20 @@ Run:
 
 from __future__ import annotations
 
+import io
 import math
 
+import matplotlib.pyplot as plt
 import pandas as pd
 import streamlit as st
 
 from crane_tool.data_loader import DEFAULT_DATA_DIR, CraneDataError, load_library
-from crane_tool.chart_plot import geometry_sketch, plot_range_chart, plot_real_chart
+from crane_tool.chart_plot import (
+    geometry_sketch,
+    plot_range_chart,
+    plot_real_chart,
+    setup_space_sketch,
+)
 from crane_tool.models import LiftRequest
 from crane_tool.selector import (
     SAFE_UTILIZATION,
@@ -32,6 +39,20 @@ DATA_ROOT = DEFAULT_DATA_DIR.parent  # .../data ; chart images live under data/c
 @st.cache_data
 def _load():
     return load_library()
+
+
+def _fig_png(fig) -> io.BytesIO:
+    """Render a matplotlib figure to a fixed-size PNG buffer (and close it).
+
+    Displaying this via ``st.image`` keeps the chart a constant size across reruns — unlike
+    ``st.pyplot``, which re-lays-out the figure each time the script reruns (e.g. on every +/-
+    input-stepper click), which looked like the chart zooming in and out.
+    """
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", dpi=150)   # no bbox_inches="tight" -> constant pixel size
+    plt.close(fig)
+    buf.seek(0)
+    return buf
 
 
 def main() -> None:
@@ -209,6 +230,26 @@ def main() -> None:
     s2.metric("Max rated capacity", f"{chosen.max_capacity_t:.0f} t")
     s3.metric("Max boom length", f"{chosen.max_boom_m:.0f} m")
 
+    # Minimum set-up space: ½ × outrigger width + tail-swing radius.
+    setup = chosen.min_setup_space_mm
+    sp_left, sp_right = st.columns([1, 1])
+    with sp_left:
+        st.markdown("**Minimum set-up space**")
+        d1, d2, d3 = st.columns(3)
+        d1.metric("Base width",
+                  f"{chosen.outrigger_width_mm/1000:.2f} m" if chosen.outrigger_width_mm else "—",
+                  help="Outrigger fully-extended span (all-terrain) or standard tyre/frame width "
+                       "(rough-terrain).")
+        d2.metric("Tail-swing radius",
+                  f"{chosen.tail_swing_radius_mm/1000:.2f} m" if chosen.tail_swing_radius_mm else "—")
+        d3.metric("Min setup space", f"{setup/1000:.2f} m" if setup else "—")
+        if setup is None:
+            st.caption("Set-up dimensions not yet recorded for this model.")
+        else:
+            st.caption("min setup space = ½ × base width + tail-swing radius.")
+    with sp_right:
+        st.pyplot(setup_space_sketch(chosen), use_container_width=True)
+
     result = evaluate_crane(chosen, req)
 
     if result.suitable:
@@ -223,7 +264,9 @@ def main() -> None:
     on_chart = has_real and result.radius_m <= cal["r_max"] and req.vertical_lift_m <= cal["h_max"]
 
     if has_real and (result.capacity_t is not None or on_chart):
-        st.pyplot(plot_real_chart(result, req, str(img)), use_container_width=True)
+        # Render to a static PNG (constant size) rather than st.pyplot, so the chart does not
+        # re-layout/resize on every rerun when the +/- input steppers fire.
+        st.image(_fig_png(plot_real_chart(result, req, str(img))), use_container_width=True)
         if result.capacity_t is None:
             st.caption(
                 "Duty point shown on the actual manufacturer working-range chart — it falls beyond "
@@ -235,7 +278,7 @@ def main() -> None:
                 "(horizontal) lines — read the rated capacity where they meet a boom arc."
             )
     elif result.capacity_t is not None:
-        st.pyplot(plot_range_chart(result, req), use_container_width=False)
+        st.image(_fig_png(plot_range_chart(result, req)))
         st.caption("Reconstructed chart (no source diagram available for this model).")
     else:
         st.info(f"No chart point for this crane at the requested radius/height ({result.reason})")

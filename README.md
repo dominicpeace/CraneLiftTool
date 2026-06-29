@@ -34,11 +34,17 @@ the recommendation with any other model in the library.
 - Recommended crane (smallest class that keeps utilization below 90%).
 - Rated capacity at the required radius and height, and the % utilization.
 - A comparison table across the whole library (suitable models first) as a first pass.
-- For a selected model, the **actual manufacturer working-range diagram** with a vertical line at
-  the horizontal reach and a horizontal line at the lift height; the rated capacity is read where
-  they meet — exactly how the PDF chart is read by hand. Cranes without a calibratable diagram fall
-  back to a reconstructed chart. Chart images + axis calibration are built by `ingest/build_charts.py`
-  and stored under `data/charts/` (with a `wr_chart` block in each crane JSON).
+- For a selected model, the **actual manufacturer working-range diagram** with a **boom + load
+  sketch**: the duty point marks the boom tip (the position the chart rates), with the boom drawn
+  from the crane up to it and the hook block hanging the headroom distance below on the hoist rope.
+  The rated capacity is read at the tip — exactly how the PDF chart is read by hand. Cranes without
+  a calibratable diagram fall back to a reconstructed chart. Chart images + axis calibration are
+  built by `ingest/build_charts.py` and stored under `data/charts/` (with a `wr_chart` block in each
+  crane JSON).
+- **Minimum set-up space** for the selected crane: `½ × base width + tail-swing radius`, with a
+  plan-view sketch. "Base width" is the outrigger fully-extended span (all-terrain) or the standard
+  tyre/frame width (rough-terrain); both are stored per crane (`outrigger_width_mm`,
+  `tail_swing_radius_mm`).
 - An override dropdown to evaluate any other crane in the library.
 
 ## Suitability rule
