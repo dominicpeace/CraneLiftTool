@@ -88,12 +88,22 @@ chart could not be read at all (scanned image, only an extension-boom diagram), 
 than shipped with an imperial or unreadable chart: GMK7550, GMK5150XL, GMK5150XLe, RT875E, RT9100.
 GRT540/GRT765/GRT780 were likewise excluded earlier.
 
-**Headline `max_capacity_t`** is each crane's official maximum rated capacity, read from the metric
-product-guide cover (e.g. GMK3060L-1 = 60 t), not inferred from the working-range chart — the chart
-often starts at a larger radius than the rated peak, so deriving it from chart points understated
-several models. The per-duty-point capacity used for suitability still comes from the load-chart
-points in `boom_configs`; for GRT9165 those points come from a reduced-configuration page (its peak
-duty-point capacity reads below the 150 t headline), flagged in its `data_status`.
+**Headline `max_capacity_t`** is each crane's official maximum rated capacity, taken as the greater
+of the metric product-guide cover figure and the load chart's own peak point. The cover figure
+matters where the product-guide working-range chart starts at a larger radius than the rated peak
+(e.g. GMK3060L-1's chart tops out at 50 t at 3 m, but it is a 60 t crane); the chart peak matters
+where the chart does tabulate the tightest radius and reads slightly above the rounded cover figure
+(e.g. RT540E 36 t, RT890E 81.7 t). The per-duty-point capacity used for suitability comes from the
+load-chart points in `boom_configs`; for GRT9165 those points come from a reduced-configuration page
+(its peak duty-point capacity reads below the 150 t headline), flagged in its `data_status`.
+
+**Reading capacity at a duty point.** The relevant boom length is the straight-line span from the
+boom foot to the hook, `√(radius² + tip_height²)`. The shortest boom that long whose charted radius
+window covers the duty radius is read directly. If the duty radius falls in a gap *between* charted
+boom lengths (e.g. just inside the longer booms' minimum charted radius), the reachable radius
+window is interpolated across boom lengths and the read is clamped into the nearest charted radius
+(a conservative capacity) — so a clearly-liftable point near the chart's steep, close-in edge is no
+longer wrongly reported "out of reach".
 
 > **Data status:** Capacities are read from the standard main-boom, 100% counterweight, 360°
 > chart; tip heights are **approximate**, and a few upward-misread points are auto-dropped. Always

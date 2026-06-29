@@ -116,6 +116,8 @@ def main() -> None:
                 f"No crane matches the current type / capacity filter — showing all "
                 f"{len(full_library)} instead."
             )
+        st.divider()
+        st.caption("Crane Lifting Study Tool · built by **TY**")
 
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Horizontal reach √(X²+Y²)", f"{reach:.2f} m")

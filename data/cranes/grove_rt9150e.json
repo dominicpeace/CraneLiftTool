@@ -2,7 +2,7 @@
   "manufacturer": "Grove",
   "model": "RT9150E",
   "type": "Rough Terrain",
-  "max_capacity_t": 135.0,
+  "max_capacity_t": 136.1,
   "max_boom_m": 60.0,
   "counterweight": "63,000 lb counterweight, 100% / 360 deg (as charted)",
   "source_pdf": "RT9150E-metric.pdf",

@@ -2,7 +2,7 @@
   "manufacturer": "Grove",
   "model": "RT540E",
   "type": "Rough Terrain",
-  "max_capacity_t": 35.0,
+  "max_capacity_t": 36.0,
   "max_boom_m": 31.0,
   "counterweight": "Full counterweight, fully extended outriggers (as-charted)",
   "source_pdf": "Grove-RT540E.pdf",

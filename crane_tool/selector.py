@@ -33,6 +33,31 @@ def required_height(req: LiftRequest) -> float:
     return req.vertical_lift_m + req.headroom_m
 
 
+def _radius_window(crane: CraneModel, boom_len_m: float) -> Tuple[float, float]:
+    """Charted radius window ``(min_radius, max_radius)`` for a given boom length, interpolated
+    across the crane's boom configs.
+
+    Each boom config is charted over a radius window whose small-radius end is the maximum
+    boom-angle limit and whose large-radius end is the low-angle reach. Those windows shift with
+    boom length, so a duty point that falls *between* two charted boom lengths is handled by
+    linearly interpolating the window — instead of being dropped just because no single charted
+    boom length happens to tabulate that exact radius.
+    """
+    cfgs = sorted(crane.boom_configs, key=lambda c: c.boom_length_m)
+    bl = [c.boom_length_m for c in cfgs]
+
+    def interp(values: List[float]) -> float:
+        if boom_len_m <= bl[0]:
+            return values[0]
+        for i in range(1, len(bl)):
+            if boom_len_m <= bl[i]:
+                f = (boom_len_m - bl[i - 1]) / (bl[i] - bl[i - 1])
+                return values[i - 1] + f * (values[i] - values[i - 1])
+        return values[-1]
+
+    return interp([c.min_radius_m for c in cfgs]), interp([c.max_radius_m for c in cfgs])
+
+
 def best_capacity(
     crane: CraneModel, radius_m: float, height_m: float
 ) -> Tuple[Optional[float], Optional[float]]:
@@ -44,23 +69,37 @@ def best_capacity(
     height is used here with no assumed pivot offset. Returns ``(capacity_t, boom_length_m)``, or
     ``(None, None)`` if the radius is off the chart or the height cannot be reached at that radius.
     """
-    # Straight-line distance from the boom foot to the duty point. The boom must span at least this
-    # to place the tip at (radius, height); a shorter boom simply cannot reach that height at that
-    # radius, however far its capacity table extends.
-    needed_len = math.hypot(radius_m, height_m)
-    cands = [
-        cfg
-        for cfg in crane.boom_configs
-        if cfg.min_radius_m <= radius_m <= cfg.max_radius_m  # capacity is charted at this radius
-        and cfg.boom_length_m >= needed_len - 1e-6           # AND long enough to reach the height
-    ]
-    if not cands:
+    cfgs = sorted(crane.boom_configs, key=lambda c: c.boom_length_m)
+    if not cfgs:
         return None, None
-    # Read capacity from the shortest boom that reaches the point: its arc passes through (or just
-    # above) the duty point, exactly how a working-range chart is read by hand. (Among booms long
-    # enough to reach, the shortest is also the closest match to the duty-point geometry.)
-    best = min(cands, key=lambda c: c.boom_length_m)
-    return best.capacity_at(radius_m), best.boom_length_m
+    # Straight-line boom span needed to place the tip at the duty point. A shorter boom simply
+    # cannot reach that height at that radius, however far its capacity table extends.
+    needed_len = math.hypot(radius_m, height_m)
+    if needed_len > cfgs[-1].boom_length_m + 1e-6:
+        return None, None  # no boom long enough to reach the height at this radius
+    long_enough = [c for c in cfgs if c.boom_length_m >= needed_len - 1e-6]
+
+    # Normal read: the shortest long-enough boom whose charted window already covers this radius —
+    # its arc passes through (or just above) the duty point, exactly how a chart is read by hand.
+    on_radius = [
+        c for c in long_enough if c.min_radius_m - 1e-6 <= radius_m <= c.max_radius_m + 1e-6
+    ]
+    if on_radius:
+        best = on_radius[0]  # cfgs are shortest-first
+        r_read = min(max(radius_m, best.min_radius_m), best.max_radius_m)
+        return best.capacity_at(r_read), best.boom_length_m
+
+    # Notch: the duty radius falls between charted boom lengths (e.g. just inside the longer booms'
+    # minimum charted radius). It is reachable only if the radius lies within the interpolated
+    # charted window for the needed boom length (above the max boom-angle limit, within the reach).
+    min_r, max_r = _radius_window(crane, needed_len)
+    if radius_m < min_r - 1e-6 or radius_m > max_r + 1e-6:
+        return None, None
+    # Read the shortest long-enough boom, radius clamped into its charted window — a small,
+    # conservative adjustment (charted capacity only grows as the radius shrinks).
+    best = long_enough[0]
+    r_read = min(max(radius_m, best.min_radius_m), best.max_radius_m)
+    return best.capacity_at(r_read), best.boom_length_m
 
 
 def evaluate_crane(crane: CraneModel, req: LiftRequest) -> LiftResult:
@@ -70,17 +109,26 @@ def evaluate_crane(crane: CraneModel, req: LiftRequest) -> LiftResult:
     capacity, boom = best_capacity(crane, radius, height)
 
     if capacity is None:
-        # Distinguish "radius off the chart" from "can't reach that height at this radius".
-        radius_charted = any(
-            c.min_radius_m <= radius <= c.max_radius_m for c in crane.boom_configs
-        )
-        if not radius_charted:
-            reason = f"Horizontal reach {radius:.1f} m is outside the load chart."
-        else:
+        # Distinguish the three ways a duty point can be off the chart.
+        needed_len = math.hypot(radius, height)
+        longest = max(c.boom_length_m for c in crane.boom_configs)
+        if needed_len > longest + 1e-6:
             reason = (
                 f"Cannot reach {height:.1f} m height at {radius:.1f} m radius "
-                f"(would need a longer boom than charted)."
+                f"(needs a {needed_len:.0f} m boom; longest is {longest:.0f} m)."
             )
+        else:
+            min_r, max_r = _radius_window(crane, needed_len)
+            if radius > max_r + 1e-6:
+                reason = (
+                    f"Horizontal reach {radius:.1f} m is beyond the load chart "
+                    f"(max ~{max_r:.0f} m at this height)."
+                )
+            else:
+                reason = (
+                    f"Load at {radius:.1f} m radius is inside the minimum radius "
+                    f"(~{min_r:.1f} m) for a {height:.1f} m tip height (boom too steep)."
+                )
         return LiftResult(
             crane=crane,
             radius_m=radius,
