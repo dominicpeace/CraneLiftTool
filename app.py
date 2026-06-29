@@ -154,7 +154,13 @@ def main() -> None:
                 if r.utilization_pct is None
                 else round(r.utilization_pct, 0),
                 "Boom used (m)": None if r.boom_length_m is None else round(r.boom_length_m, 0),
-                "Verdict": "✅ Suitable" if r.suitable else "⛔ Not suitable",
+                "Verdict": (
+                    "✅ Suitable"
+                    if r.suitable
+                    else "🚫 Out of reach"
+                    if r.capacity_t is None
+                    else "⛔ Not suitable"
+                ),
                 "_ok": r.suitable,
             }
         )

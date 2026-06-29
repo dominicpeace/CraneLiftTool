@@ -161,10 +161,16 @@ def plot_real_chart(result: LiftResult, req: LiftRequest, image_path: str) -> Fi
     ax.annotate(f"  {cap_txt}", (x_reach, y_lift), color=color, fontsize=15, fontweight="bold",
                 zorder=7)
 
-    verdict = "SUITABLE" if result.suitable else "NOT SUITABLE"
-    util = f" · {result.utilization_pct:.0f}% used" if result.utilization_pct is not None else ""
-    ax.set_title(f"{result.crane.name}  ·  reach {reach:.1f} m × lift {lift:.1f} m  →  {cap_txt}"
-                 f"  ({verdict}{util})", fontsize=11, color=color, fontweight="bold")
+    # "Out of reach" (duty point beyond the boom's coverage, so there is no rated capacity at all)
+    # is a distinct verdict from "Not suitable" (reachable, but the load exceeds the safe limit).
+    if result.capacity_t is None:
+        tail = "OUT OF REACH"
+    else:
+        verdict = "SUITABLE" if result.suitable else "NOT SUITABLE"
+        util = f" · {result.utilization_pct:.0f}% used" if result.utilization_pct is not None else ""
+        tail = f"{cap_txt}  ({verdict}{util})"
+    ax.set_title(f"{result.crane.name}  ·  reach {reach:.1f} m × lift {lift:.1f} m  →  {tail}",
+                 fontsize=11, color=color, fontweight="bold")
     ax.set_xlim(0, cw)
     ax.set_ylim(ch, 0)
     ax.axis("off")
@@ -223,11 +229,16 @@ def plot_range_chart(result: LiftResult, req: LiftRequest) -> Figure:
     ax.annotate(f"  {cap_txt}", (radius, lift_h), xytext=(6, 6), textcoords="offset points",
                 fontsize=11, fontweight="bold", color=color, zorder=8)
 
-    verdict = "SUITABLE" if result.suitable else "NOT SUITABLE"
-    util = f" · {result.utilization_pct:.0f}% used" if result.utilization_pct is not None else ""
+    # "Out of reach" (beyond boom coverage, no rated capacity) is distinct from "Not suitable"
+    # (reachable but the load exceeds the safe limit).
+    if result.capacity_t is None:
+        tail = "OUT OF REACH"
+    else:
+        verdict = "SUITABLE" if result.suitable else "NOT SUITABLE"
+        util = f" · {result.utilization_pct:.0f}% used" if result.utilization_pct is not None else ""
+        tail = f"{cap_txt}  ({verdict}{util})"
     ax.set_title(
-        f"{crane.name}  ·  reach {radius:.1f} m × lift {lift_h:.1f} m  →  {cap_txt}"
-        f"  ({verdict}{util})",
+        f"{crane.name}  ·  reach {radius:.1f} m × lift {lift_h:.1f} m  →  {tail}",
         fontsize=10.5, color=color, fontweight="bold",
     )
     ax.set_xlabel("Horizontal reach (m)  — load-chart radius")
