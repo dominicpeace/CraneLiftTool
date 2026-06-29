@@ -127,9 +127,24 @@ def main() -> int:
     done = skipped = 0
     for jpath in sorted(CRANES.glob("*.json")):
         data = json.loads(jpath.read_text(encoding="utf-8"))
-        had_chart = data.pop("wr_chart", None) is not None  # rebuild cleanly
         pdf_name = data.get("source_pdf", "")
         pdf_path = find_pdf(pdf_name)
+        # Hand-calibrated charts (graphic / unlabeled axes that can't be auto-calibrated from
+        # text ticks) carry "manual": true. Never recompute or drop their calibration — just
+        # re-render the PNG from the stored page so the image stays reproducible.
+        manual = data.get("wr_chart") or {}
+        if manual.get("manual"):
+            if pdf_path:
+                img = CHARTS / f"{jpath.stem}.png"
+                with fitz.open(str(pdf_path)) as fpdf:
+                    fpdf[manual["page"] - 1].get_pixmap(dpi=DPI).save(str(img))
+                done += 1
+                print(f"  ok   {data['model']:<12} page {manual['page']}  (manual, re-rendered)")
+            else:
+                skipped += 1
+                print(f"  skip {data['model']:<12} (manual, no local PDF: {pdf_name or '-'})")
+            continue
+        had_chart = data.pop("wr_chart", None) is not None  # rebuild cleanly
         if not pdf_path:
             if had_chart:  # only rewrite if we removed a now-stale chart
                 jpath.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")

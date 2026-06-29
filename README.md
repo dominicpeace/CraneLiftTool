@@ -67,25 +67,27 @@ fast. The PDF-ingest and OCR tooling, plus pytest, live in `requirements-ingest.
 
 ## Crane data
 
-The crane library lives in `data/cranes/` as one JSON file per model — **25 Grove cranes, all
+The crane library lives in `data/cranes/` as one JSON file per model — **29 Grove cranes, all
 metric** (metres, tonnes). Every model carries a **real manufacturer working-range chart snip**:
 `ingest/build_charts.py` finds each crane's metric "Working range" diagram page in its Manitowoc
-product guide, calibrates both axes from the printed tick labels, renders the page to
-`data/charts/<slug>.png`, and stores the image + calibration in the JSON's `wr_chart` block. The
-app overlays your reach/lift crosshair on that image.
+product guide, calibrates both axes, renders the page to `data/charts/<slug>.png`, and stores the
+image + calibration in the JSON's `wr_chart` block. The app overlays your reach/lift crosshair on
+that image. Most charts calibrate automatically from the printed tick labels. Four RT diagrams whose
+axis numbers are drawn as graphics (or whose height axis is unlabeled) were calibrated from the
+printed grid itself and carry `"manual": true` in `wr_chart` — `build_charts.py` re-renders their
+PNGs but never overwrites that calibration.
 
 | Class | Models | Source |
 |---|---|---|
 | All-terrain (GMK), 18 | GMK3050-3, GMK3060-2, GMK3060L-1, GMK4070L, GMK4080-3, GMK4080L, GMK4090-1, GMK4100L-2, GMK5120L, GMK5150-1, GMK5150L-1, GMK5150L-1e, GMK5180-1, GMK5200-1, GMK5250L-1, GMK5250XL-1, GMK6300L-1, GMK6450-1 | manitowoc.com **metric** product guides |
 | Rough-terrain (GRT), 5 | GRT655, GRT655L, GRT8100-1, GRT8120, GRT9165 | manitowoc.com **metric** product guides |
-| Rough-terrain (RT), 2 | RT870, RT880E | Grove **metric** product guides |
+| Rough-terrain (RT), 6 | RT540E, RT870, RT880E, RT890E, RT9130E, RT9150E | Grove / Manitowoc **metric** product guides |
 
 **Metric only.** Models for which only an imperial guide (feet / US tons) was available, or whose
-chart could not be auto-calibrated (axis numbers drawn as graphics rather than text), were removed
-rather than shipped with an imperial or unreadable chart: GMK7550, GMK5150XL, GMK5150XLe, RT875E,
-RT9100, RT9130E, RT9150E, RT890E, RT540E. GRT540/GRT765/GRT780 were likewise excluded earlier.
-GRT9165 parsed below its 150 t rating (auto-selected page is likely a reduced configuration) —
-flagged in its `data_status`.
+chart could not be read at all (scanned image, only an extension-boom diagram), were removed rather
+than shipped with an imperial or unreadable chart: GMK7550, GMK5150XL, GMK5150XLe, RT875E, RT9100.
+GRT540/GRT765/GRT780 were likewise excluded earlier. GRT9165 parsed below its 150 t rating
+(auto-selected page is likely a reduced configuration) — flagged in its `data_status`.
 
 > **Data status:** Capacities are read from the standard main-boom, 100% counterweight, 360°
 > chart; tip heights are **approximate**, and a few upward-misread points are auto-dropped. Always
