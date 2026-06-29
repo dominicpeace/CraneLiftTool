@@ -6,6 +6,8 @@ Run:
 
 from __future__ import annotations
 
+import math
+
 import pandas as pd
 import streamlit as st
 
@@ -74,8 +76,26 @@ def main() -> None:
             default=all_types,
             help="Filter the library, e.g. Rough Terrain vs All Terrain.",
         )
+        caps = [c.max_capacity_t for c in full_library]
+        cap_floor = float(math.floor(min(caps) / 10) * 10)
+        cap_ceil = float(math.ceil(max(caps) / 10) * 10)
+        cap_lo, cap_hi = st.slider(
+            "Max rated capacity (t)",
+            min_value=cap_floor,
+            max_value=cap_ceil,
+            value=(cap_floor, cap_ceil),
+            step=5.0,
+            help="Filter the library by each crane's headline maximum rated capacity.",
+        )
 
-    cranes = [c for c in full_library if c.type in chosen_types] or full_library
+    cranes = [
+        c
+        for c in full_library
+        if c.type in chosen_types and cap_lo <= c.max_capacity_t <= cap_hi
+    ]
+    cap_filtered = bool(cranes)
+    if not cap_filtered:
+        cranes = full_library  # never leave the app with an empty library
 
     req = LiftRequest(
         x_reach_m=x, y_reach_m=y, vertical_lift_m=lift, load_t=load, headroom_m=headroom
@@ -89,7 +109,13 @@ def main() -> None:
         st.divider()
         st.caption("Geometry")
         st.pyplot(geometry_sketch(x, y, lift), use_container_width=True)
-        st.caption(f"Considering {len(cranes)} of {len(full_library)} cranes (type filter).")
+        if cap_filtered:
+            st.caption(f"Considering {len(cranes)} of {len(full_library)} cranes (filters applied).")
+        else:
+            st.caption(
+                f"No crane matches the current type / capacity filter — showing all "
+                f"{len(full_library)} instead."
+            )
 
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Horizontal reach √(X²+Y²)", f"{reach:.2f} m")
@@ -150,16 +176,31 @@ def main() -> None:
         "the PDF chart by hand."
     )
     names = [c.name for c in cranes]
+    by_name = {c.name: c for c in cranes}
+
+    def _model_label(name: str) -> str:
+        """Dropdown label: model + type + headline capacity + max boom, so the class and size of
+        each crane is clear while choosing (not just the bare model name)."""
+        c = by_name[name]
+        return f"{name}  ·  {c.type}  ·  {c.max_capacity_t:.0f} t max  ·  boom {c.max_boom_m:.0f} m"
+
     default_name = rec.crane.name if rec is not None else names[-1]
     # Keep the user's chosen model sticky: default to the recommendation only on first load (or if
     # the current pick has been filtered out of the list), so changing the lift inputs to check
     # other duty points does NOT silently switch the chart to a different crane.
     if st.session_state.get("crane_model") not in names:
         st.session_state["crane_model"] = default_name
-    chosen_name = st.selectbox("Crane model", names, key="crane_model")
+    chosen_name = st.selectbox("Crane model", names, key="crane_model", format_func=_model_label)
     if rec is not None and chosen_name != rec.crane.name:
         st.caption(f"🎯 Recommended for this lift: **{rec.crane.name}** (selection stays on your choice).")
-    chosen = next(c for c in cranes if c.name == chosen_name)
+    chosen = by_name[chosen_name]
+
+    # Headline specs of the selected crane, so it is clear what class/size has been picked.
+    s1, s2, s3 = st.columns(3)
+    s1.metric("Crane type", chosen.type)
+    s2.metric("Max rated capacity", f"{chosen.max_capacity_t:.0f} t")
+    s3.metric("Max boom length", f"{chosen.max_boom_m:.0f} m")
+
     result = evaluate_crane(chosen, req)
 
     if result.suitable:
