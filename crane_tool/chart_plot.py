@@ -12,9 +12,10 @@ import math
 import matplotlib
 
 matplotlib.use("Agg")  # headless backend; Streamlit renders the Figure object directly.
+import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
-from matplotlib.patches import Arc, Rectangle
+from matplotlib.patches import Arc, FancyBboxPatch, Rectangle
 
 from .models import LiftRequest, LiftResult
 
@@ -177,16 +178,23 @@ def setup_space_sketch(crane) -> Figure:
     return fig
 
 
-def _draw_hook(ax, x: float, y: float, s: float, color: str = "#222222") -> None:
+def _draw_hook(ax, x: float, y: float, s: float, color: str = "#2b2b2b") -> None:
     """Draw a small hook-block graphic at ``(x, y)`` in image pixel coords (y increases downward).
 
-    ``s`` is the block size in pixels. A short rope-block plus a hook throat (a near-closed ring
-    with a small opening) — enough to read as a load hook on the chart.
+    ``s`` is the block size in pixels. A small rounded block plus a slim hook throat (a near-closed
+    ring with a small opening) — enough to read as a load hook on the chart without looking heavy.
     """
-    ax.add_patch(Rectangle((x - 0.55 * s, y), 1.1 * s, 0.7 * s, color=color, zorder=8))
-    cy = y + 0.7 * s + 0.8 * s
-    ax.add_patch(Arc((x, cy), 1.5 * s, 1.5 * s, angle=0, theta1=105, theta2=75,
-                     color=color, lw=2.2, zorder=8))
+    block = FancyBboxPatch(
+        (x - 0.34 * s, y), 0.68 * s, 0.5 * s,
+        boxstyle="round,pad=0,rounding_size=" + f"{0.12 * s}",
+        facecolor=color, edgecolor="none", zorder=8,
+    )
+    block.set_path_effects([pe.withStroke(linewidth=1.4, foreground="white", alpha=0.7)])
+    ax.add_patch(block)
+    cy = y + 0.5 * s + 0.62 * s
+    ax.add_patch(Arc((x, cy), 1.0 * s, 1.0 * s, angle=0, theta1=110, theta2=70,
+                     color=color, lw=1.3, zorder=8,
+                     capstyle="round"))
 
 
 def plot_real_chart(result: LiftResult, req: LiftRequest, image_path: str) -> Figure:
@@ -241,13 +249,21 @@ def plot_real_chart(result: LiftResult, req: LiftRequest, image_path: str) -> Fi
     lx, ly = _to_px(reach, lift)                    # load / hook block (hangs headroom below the tip)
     gx, gy = _to_px(reach, 0.0)                      # ground point under the load (radius reference)
 
-    ax.plot([lx, gx], [ly, gy], color="#8a8a8a", lw=0.8, linestyle=(0, (3, 3)), zorder=4)  # radius ref
-    ax.plot([fx, tx], [fy, ty], color="#b5651d", lw=4.0, solid_capstyle="round", zorder=5)  # boom
-    ax.plot([tx, lx], [ty, ly], color="#222222", lw=1.3, zorder=5)                          # hoist rope
-    _draw_hook(ax, lx, ly, 0.024 * cw)                                                       # load hook
-    ax.scatter([tx], [ty], s=150, color=color, edgecolors="black", linewidths=1.4, zorder=7)  # tip dot
+    halo = [pe.Stroke(linewidth=3.4, foreground="white", alpha=0.7), pe.Normal()]
+
+    ax.plot([lx, gx], [ly, gy], color="#9aa0a6", lw=0.7, linestyle=(0, (2, 3)), zorder=4)  # radius ref
+    boom, = ax.plot([fx, tx], [fy, ty], color="#c8771e", lw=2.6, solid_capstyle="round",
+                    zorder=5)                                                              # boom
+    boom.set_path_effects(halo)                                       # soft white edge -> clean read
+    ax.scatter([fx], [fy], s=22, color="#7a4a12", zorder=5)                                # boom foot
+    rope, = ax.plot([tx, lx], [ty, ly], color="#333333", lw=1.0, zorder=5)                 # hoist rope
+    rope.set_path_effects(halo)
+    _draw_hook(ax, lx, ly, 0.020 * cw)                                                      # load hook
+    ax.scatter([tx], [ty], s=88, color=color, edgecolors="white", linewidths=1.6,
+               zorder=7)                                                                    # tip dot
     cap_txt = f"{result.capacity_t:.1f} t" if result.capacity_t is not None else "out of reach"
-    ax.annotate(f"  {cap_txt}", (tx, ty), color=color, fontsize=15, fontweight="bold", zorder=9)
+    ax.annotate(f"  {cap_txt}", (tx, ty), color=color, fontsize=13, fontweight="bold", zorder=9,
+                path_effects=[pe.withStroke(linewidth=2.6, foreground="white")])
 
     # "Out of reach" (duty point beyond the boom's coverage, so there is no rated capacity at all)
     # is a distinct verdict from "Not suitable" (reachable, but the load exceeds the safe limit).
