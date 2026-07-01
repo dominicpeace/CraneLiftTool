@@ -905,7 +905,9 @@
       1367.28
     ],
     "r_max": 40.0,
-    "h_max": 50.0
+    "h_max": 50.0,
+    "pin_r_m": -1.5,
+    "pin_elev_m": 4.3
   },
   "outrigger_width_mm": 6200.0,
   "tail_swing_radius_mm": 4250.0
