@@ -244,8 +244,12 @@ def plot_real_chart(result: LiftResult, req: LiftRequest, image_path: str) -> Fi
         return rx[0] * rad + rx[1] - left, hy[0] * h + hy[1] - top
 
     tip_h = result.required_height_m              # lift + headroom -> the rated boom-tip position
-    pin_z = result.crane.boom_pivot_height_m        # boom-foot pin height (fitted), not the ground
-    fx, fy = _to_px(0.0, pin_z)                     # boom foot pin (slew axis, ~pin height up)
+    # Boom-foot elevation for the drawing: prefer the pin read off this chart's own silhouette
+    # (where the max-angle boom centreline meets the crane body), else the fitted geometric pivot.
+    pin_z = cal.get("pin_elev_m")
+    if pin_z is None:
+        pin_z = result.crane.boom_pivot_height_m
+    fx, fy = _to_px(0.0, pin_z)                     # boom foot pin (slew axis, at the pin elevation)
     tx, ty = _to_px(reach, tip_h)                   # boom tip = duty point (where capacity is read)
     lx, ly = _to_px(reach, lift)                    # load / hook block (hangs headroom below the tip)
     gx, gy = _to_px(reach, 0.0)                      # ground point under the load (radius reference)
