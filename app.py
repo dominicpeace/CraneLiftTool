@@ -87,7 +87,9 @@ def main() -> None:
             min_value=0.0,
             value=1.5,
             step=0.5,
-            help="Added to vertical lift for hook-block / clearance to set the required tip height.",
+            help="Clearance gap from the load up to the boom tip (rope / hook-block). Shown on the "
+                 "sketch as the tip sitting above the load; it does NOT change the rated capacity, "
+                 "which is read at the load itself (reach × vertical lift).",
         )
         st.divider()
         all_types = sorted({c.type for c in full_library})

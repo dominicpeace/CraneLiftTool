@@ -114,16 +114,20 @@ def best_capacity(
 def evaluate_crane(crane: CraneModel, req: LiftRequest) -> LiftResult:
     """Evaluate a single crane against a lift request."""
     radius = horizontal_reach(req.x_reach_m, req.y_reach_m)
-    height = required_height(req)
-    capacity, boom = best_capacity(crane, radius, height)
+    # Capacity is read at the LOAD position - the horizontal reach and the vertical lift height.
+    # The headroom allowance is only the rope/clearance gap from the load up to the boom tip: it
+    # positions the drawn boom tip (lift + headroom) but does not move the load or change the rating.
+    lift_h = req.vertical_lift_m
+    tip_h = required_height(req)          # boom-tip height for the sketch = lift + headroom
+    capacity, boom = best_capacity(crane, radius, lift_h)
 
     if capacity is None:
         # Distinguish the three ways a duty point can be off the chart.
-        needed_len = _needed_boom_len(crane, radius, height)
+        needed_len = _needed_boom_len(crane, radius, lift_h)
         longest = max(c.boom_length_m for c in crane.boom_configs)
         if needed_len > longest + 1e-6:
             reason = (
-                f"Cannot reach {height:.1f} m height at {radius:.1f} m radius "
+                f"Cannot reach {lift_h:.1f} m lift at {radius:.1f} m radius "
                 f"(needs a {needed_len:.1f} m boom; longest is {longest:.1f} m)."
             )
         else:
@@ -136,12 +140,12 @@ def evaluate_crane(crane: CraneModel, req: LiftRequest) -> LiftResult:
             else:
                 reason = (
                     f"Load at {radius:.1f} m radius is inside the minimum radius "
-                    f"(~{min_r:.1f} m) for a {height:.1f} m tip height (boom too steep)."
+                    f"(~{min_r:.1f} m) for a {lift_h:.1f} m lift (boom too steep)."
                 )
         return LiftResult(
             crane=crane,
             radius_m=radius,
-            required_height_m=height,
+            required_height_m=tip_h,
             capacity_t=None,
             boom_length_m=None,
             utilization=None,
@@ -165,7 +169,7 @@ def evaluate_crane(crane: CraneModel, req: LiftRequest) -> LiftResult:
     return LiftResult(
         crane=crane,
         radius_m=radius,
-        required_height_m=height,
+        required_height_m=tip_h,
         capacity_t=capacity,
         boom_length_m=boom,
         utilization=utilization,

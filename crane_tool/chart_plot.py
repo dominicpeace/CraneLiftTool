@@ -253,8 +253,8 @@ def plot_real_chart(result: LiftResult, req: LiftRequest, image_path: str) -> Fi
         pin_z = result.crane.boom_pivot_height_m
     pin_r = cal.get("pin_r_m", 0.0)
     fx, fy = _to_px(pin_r, pin_z)                    # boom foot pin as drawn on the silhouette
-    tx, ty = _to_px(reach, tip_h)                   # boom tip = duty point (where capacity is read)
-    lx, ly = _to_px(reach, lift)                    # load / hook block (hangs headroom below the tip)
+    tx, ty = _to_px(reach, tip_h)                   # boom tip (headroom above the load)
+    lx, ly = _to_px(reach, lift)                    # load = rated point (reach, vertical lift)
     gx, gy = _to_px(reach, 0.0)                      # ground point under the load (radius reference)
 
     halo = [pe.Stroke(linewidth=3.4, foreground="white", alpha=0.7), pe.Normal()]
@@ -266,11 +266,13 @@ def plot_real_chart(result: LiftResult, req: LiftRequest, image_path: str) -> Fi
     ax.scatter([fx], [fy], s=22, color="#7a4a12", zorder=5)                                # boom foot
     rope, = ax.plot([tx, lx], [ty, ly], color="#333333", lw=1.0, zorder=5)                 # hoist rope
     rope.set_path_effects(halo)
-    _draw_hook(ax, lx, ly, 0.020 * cw)                                                      # load hook
-    ax.scatter([tx], [ty], s=88, color=color, edgecolors="white", linewidths=1.6,
-               zorder=7)                                                                    # tip dot
+    _draw_hook(ax, lx, ly, 0.018 * cw)                                                      # load hook
+    ax.scatter([tx], [ty], s=24, color="#7a4a12", zorder=6)                                 # boom-tip sheave
+    # Rated point = the LOAD at (reach, lift). Capacity is read here; the boom tip sits headroom
+    # above it and the hoist rope + hook block hang down to this point.
+    ax.scatter([lx], [ly], s=90, color=color, edgecolors="white", linewidths=1.6, zorder=9)
     cap_txt = f"{result.capacity_t:.1f} t" if result.capacity_t is not None else "out of reach"
-    ax.annotate(f"  {cap_txt}", (tx, ty), color=color, fontsize=13, fontweight="bold", zorder=9,
+    ax.annotate(f"  {cap_txt}", (lx, ly), color=color, fontsize=13, fontweight="bold", zorder=10,
                 path_effects=[pe.withStroke(linewidth=2.6, foreground="white")])
 
     # "Out of reach" (duty point beyond the boom's coverage, so there is no rated capacity at all)
