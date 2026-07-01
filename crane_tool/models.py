@@ -5,6 +5,7 @@ All quantities are metric: distances in metres (m), weights/capacities in metric
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from typing import List, Optional
 
@@ -98,6 +99,34 @@ class CraneModel:
         if self.outrigger_width_mm is None or self.tail_swing_radius_mm is None:
             return None
         return 0.5 * self.outrigger_width_mm + self.tail_swing_radius_mm
+
+    @property
+    def boom_pivot_height_m(self) -> float:
+        """Estimated boom-foot pin height above ground (m), fitted from this crane's own data.
+
+        Each boom length's maximum tip height is ``pivot + boom_length × sin(max boom angle)``, so a
+        least-squares line through the crane's ``(boom_length, max_tip_height)`` points has the pin
+        height as its intercept. Measuring the boom from this pin (not the ground) matches the real
+        machine and the working-range chart, where every boom-angle line fans out from the pin.
+        Falls back to an assumed ~80° max angle when there is only one boom length; clamped to a
+        sane 0-5 m.
+        """
+        cfgs = self.boom_configs
+        n = len(cfgs)
+        if n == 0:
+            return 0.0
+        lengths = [c.boom_length_m for c in cfgs]
+        heights = [c.max_tip_height_m for c in cfgs]
+        mean_l = sum(lengths) / n
+        sxx = sum((length - mean_l) ** 2 for length in lengths)
+        if sxx < 1e-9:  # a single boom length (or all equal) can't fit a slope
+            pin = min(heights) - max(lengths) * math.sin(math.radians(80.0))
+        else:
+            mean_h = sum(heights) / n
+            slope = sum((length - mean_l) * (h - mean_h)
+                        for length, h in zip(lengths, heights)) / sxx
+            pin = mean_h - slope * mean_l
+        return min(max(pin, 0.0), 5.0)
 
 
 @dataclass(frozen=True)

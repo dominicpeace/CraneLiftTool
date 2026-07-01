@@ -58,6 +58,15 @@ def _radius_window(crane: CraneModel, boom_len_m: float) -> Tuple[float, float]:
     return interp([c.min_radius_m for c in cfgs]), interp([c.max_radius_m for c in cfgs])
 
 
+def _needed_boom_len(crane: CraneModel, radius_m: float, height_m: float) -> float:
+    """Straight-line boom span from the boom-foot pin to a tip at ``(radius, height)``.
+
+    The pin sits ``crane.boom_pivot_height_m`` above ground, not at ground, so the vertical leg is
+    measured from there — matching the real machine and how the working-range chart is drawn.
+    """
+    return math.hypot(radius_m, max(height_m - crane.boom_pivot_height_m, 0.0))
+
+
 def best_capacity(
     crane: CraneModel, radius_m: float, height_m: float
 ) -> Tuple[Optional[float], Optional[float]]:
@@ -74,7 +83,7 @@ def best_capacity(
         return None, None
     # Straight-line boom span needed to place the tip at the duty point. A shorter boom simply
     # cannot reach that height at that radius, however far its capacity table extends.
-    needed_len = math.hypot(radius_m, height_m)
+    needed_len = _needed_boom_len(crane, radius_m, height_m)
     if needed_len > cfgs[-1].boom_length_m + 1e-6:
         return None, None  # no boom long enough to reach the height at this radius
     long_enough = [c for c in cfgs if c.boom_length_m >= needed_len - 1e-6]
@@ -110,12 +119,12 @@ def evaluate_crane(crane: CraneModel, req: LiftRequest) -> LiftResult:
 
     if capacity is None:
         # Distinguish the three ways a duty point can be off the chart.
-        needed_len = math.hypot(radius, height)
+        needed_len = _needed_boom_len(crane, radius, height)
         longest = max(c.boom_length_m for c in crane.boom_configs)
         if needed_len > longest + 1e-6:
             reason = (
                 f"Cannot reach {height:.1f} m height at {radius:.1f} m radius "
-                f"(needs a {needed_len:.0f} m boom; longest is {longest:.0f} m)."
+                f"(needs a {needed_len:.1f} m boom; longest is {longest:.1f} m)."
             )
         else:
             min_r, max_r = _radius_window(crane, needed_len)
