@@ -201,10 +201,11 @@ def plot_real_chart(result: LiftResult, req: LiftRequest, image_path: str) -> Fi
     """Overlay a boom + load sketch on the crane's actual working-range diagram (PNG).
 
     Uses the axis calibration in ``result.crane.wr_chart`` (pixel = m*value + b for radius and
-    height). The point the chart rates is the BOOM TIP at ``(reach, lift + headroom)`` — that is
-    where capacity is read. The hook block hangs the headroom distance below the tip on the hoist
-    rope, with the load underneath. We draw the boom from the foot up to the tip, the rope down to
-    the load, and a hook-block graphic — a more practical picture than a bare crosshair.
+    height). The point the chart rates is the BOOM TIP at ``(reach, vertical lift)`` — that is where
+    capacity is read, and it does not move with headroom. Headroom is the rope length: the hook
+    block hangs that far BELOW the tip, so changing headroom slides the load up/down while the tip
+    (rated point) stays put. We draw the boom from the foot up to the tip, the rope down to the
+    load, and a hook-block graphic — a more practical picture than a bare crosshair.
     """
     cal = result.crane.wr_chart
     rx, hy = cal["rx"], cal["hy"]
@@ -243,7 +244,11 @@ def plot_real_chart(result: LiftResult, req: LiftRequest, image_path: str) -> Fi
     def _to_px(rad: float, h: float) -> tuple[float, float]:
         return rx[0] * rad + rx[1] - left, hy[0] * h + hy[1] - top
 
-    tip_h = result.required_height_m              # lift + headroom -> the rated boom-tip position
+    # The rated point is the boom TIP at (reach, vertical lift) - where capacity is read - and it is
+    # FIXED regardless of headroom. Headroom is the rope length: the load/hook hangs that far BELOW
+    # the tip, so stepping headroom up/down moves the load, not the tip.
+    tip_h = lift                                    # boom tip = rated point = (reach, vertical lift)
+    load_h = max(lift - req.headroom_m, 0.0)        # load / hook: hangs headroom below the tip
     # Boom-foot pin for the drawing: prefer the point read off this chart's own silhouette (where
     # the max-angle boom centreline meets the crane body, above the rear wheels), else the fitted
     # geometric pivot on the slew axis. pin_r_m is the horizontal offset from the slew axis
@@ -253,8 +258,8 @@ def plot_real_chart(result: LiftResult, req: LiftRequest, image_path: str) -> Fi
         pin_z = result.crane.boom_pivot_height_m
     pin_r = cal.get("pin_r_m", 0.0)
     fx, fy = _to_px(pin_r, pin_z)                    # boom foot pin as drawn on the silhouette
-    tx, ty = _to_px(reach, tip_h)                   # boom tip (headroom above the load)
-    lx, ly = _to_px(reach, lift)                    # load = rated point (reach, vertical lift)
+    tx, ty = _to_px(reach, tip_h)                   # boom tip = rated point (fixed re: headroom)
+    lx, ly = _to_px(reach, load_h)                  # load / hook block (hangs headroom below the tip)
     gx, gy = _to_px(reach, 0.0)                      # ground point under the load (radius reference)
 
     halo = [pe.Stroke(linewidth=3.4, foreground="white", alpha=0.7), pe.Normal()]
@@ -267,12 +272,11 @@ def plot_real_chart(result: LiftResult, req: LiftRequest, image_path: str) -> Fi
     rope, = ax.plot([tx, lx], [ty, ly], color="#333333", lw=1.0, zorder=5)                 # hoist rope
     rope.set_path_effects(halo)
     _draw_hook(ax, lx, ly, 0.018 * cw)                                                      # load hook
-    ax.scatter([tx], [ty], s=24, color="#7a4a12", zorder=6)                                 # boom-tip sheave
-    # Rated point = the LOAD at (reach, lift). Capacity is read here; the boom tip sits headroom
-    # above it and the hoist rope + hook block hang down to this point.
-    ax.scatter([lx], [ly], s=90, color=color, edgecolors="white", linewidths=1.6, zorder=9)
+    # Rated point = the boom TIP at (reach, vertical lift); capacity is read here. The hook block
+    # hangs the headroom distance below it on the rope, so headroom moves the load, not this point.
+    ax.scatter([tx], [ty], s=90, color=color, edgecolors="white", linewidths=1.6, zorder=9)
     cap_txt = f"{result.capacity_t:.1f} t" if result.capacity_t is not None else "out of reach"
-    ax.annotate(f"  {cap_txt}", (lx, ly), color=color, fontsize=13, fontweight="bold", zorder=10,
+    ax.annotate(f"  {cap_txt}", (tx, ty), color=color, fontsize=13, fontweight="bold", zorder=10,
                 path_effects=[pe.withStroke(linewidth=2.6, foreground="white")])
 
     # "Out of reach" (duty point beyond the boom's coverage, so there is no rated capacity at all)
