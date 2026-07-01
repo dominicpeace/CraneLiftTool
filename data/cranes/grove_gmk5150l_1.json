@@ -1158,7 +1158,7 @@
     ],
     "r_max": 60.0,
     "h_max": 60.0,
-    "pin_r_m": -2.0,
+    "pin_r_m": -2.7,
     "pin_elev_m": 4.5
   },
   "outrigger_width_mm": 7600.0,
