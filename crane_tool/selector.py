@@ -61,10 +61,11 @@ def _radius_window(crane: CraneModel, boom_len_m: float) -> Tuple[float, float]:
 def _needed_boom_len(crane: CraneModel, radius_m: float, height_m: float) -> float:
     """Straight-line boom span from the boom-foot pin to a tip at ``(radius, height)``.
 
-    The pin sits ``crane.boom_pivot_height_m`` above ground, not at ground, so the vertical leg is
-    measured from there — matching the real machine and how the working-range chart is drawn.
+    The pin sits ``crane.boom_foot_elev_m`` above ground (the same pin the sketch draws the boom
+    from), not at ground, so the vertical leg is measured from there — matching the machine and the
+    drawn boom.
     """
-    return math.hypot(radius_m, max(height_m - crane.boom_pivot_height_m, 0.0))
+    return math.hypot(radius_m, max(height_m - crane.boom_foot_elev_m, 0.0))
 
 
 def best_capacity(
@@ -86,29 +87,37 @@ def best_capacity(
     needed_len = _needed_boom_len(crane, radius_m, height_m)
     if needed_len > cfgs[-1].boom_length_m + 1e-6:
         return None, None  # no boom long enough to reach the height at this radius
-    long_enough = [c for c in cfgs if c.boom_length_m >= needed_len - 1e-6]
 
-    # Normal read: the shortest long-enough boom whose charted window already covers this radius —
-    # its arc passes through (or just above) the duty point, exactly how a chart is read by hand.
-    on_radius = [
-        c for c in long_enough if c.min_radius_m - 1e-6 <= radius_m <= c.max_radius_m + 1e-6
-    ]
-    if on_radius:
-        best = on_radius[0]  # cfgs are shortest-first
-        r_read = min(max(radius_m, best.min_radius_m), best.max_radius_m)
-        return best.capacity_at(r_read), best.boom_length_m
-
-    # Notch: the duty radius falls between charted boom lengths (e.g. just inside the longer booms'
-    # minimum charted radius). It is reachable only if the radius lies within the interpolated
-    # charted window for the needed boom length (above the max boom-angle limit, within the reach).
+    # Reachability: the duty radius must lie within the charted radius window for this boom length
+    # (interpolated across boom lengths) — below the min-radius (max-angle) limit it is too steep,
+    # past the max-radius it is off the chart.
     min_r, max_r = _radius_window(crane, needed_len)
     if radius_m < min_r - 1e-6 or radius_m > max_r + 1e-6:
         return None, None
-    # Read the shortest long-enough boom, radius clamped into its charted window — a small,
-    # conservative adjustment (charted capacity only grows as the radius shrinks).
-    best = long_enough[0]
-    r_read = min(max(radius_m, best.min_radius_m), best.max_radius_m)
-    return best.capacity_at(r_read), best.boom_length_m
+
+    def cap_at(cfg) -> Optional[float]:
+        # Capacity at this radius on one boom, clamping the radius into that boom's charted window
+        # (charted capacity only grows as the radius shrinks, so clamping up to the min radius is a
+        # safe read at the steep end).
+        r_read = min(max(radius_m, cfg.min_radius_m), cfg.max_radius_m)
+        return cfg.capacity_at(r_read)
+
+    # A telescopic boom extends to exactly the length needed to put the tip at the duty point, so
+    # read the rating at that exact length — interpolating between the charted boom just shorter
+    # (lo) and the shortest charted boom long enough to reach it (hi) — rather than jumping to the
+    # next full charted boom (which understates the capacity).
+    hi_idx = next(i for i, c in enumerate(cfgs) if c.boom_length_m >= needed_len - 1e-6)
+    hi = cfgs[hi_idx]
+    lo = cfgs[hi_idx - 1] if hi_idx > 0 else None
+    cap_hi = cap_at(hi)
+    if lo is None:
+        return cap_hi, hi.boom_length_m
+    cap_lo = cap_at(lo)
+    if cap_lo is None or cap_hi is None:
+        return (cap_hi, hi.boom_length_m) if cap_hi is not None else (cap_lo, lo.boom_length_m)
+    span = hi.boom_length_m - lo.boom_length_m
+    frac = 0.0 if span <= 1e-9 else (needed_len - lo.boom_length_m) / span
+    return cap_lo + frac * (cap_hi - cap_lo), needed_len
 
 
 def evaluate_crane(crane: CraneModel, req: LiftRequest) -> LiftResult:

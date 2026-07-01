@@ -128,6 +128,18 @@ class CraneModel:
             pin = mean_h - slope * mean_l
         return min(max(pin, 0.0), 5.0)
 
+    @property
+    def boom_foot_elev_m(self) -> float:
+        """Boom-foot pin elevation used for the boom geometry (m).
+
+        Prefers the point digitised off this crane's chart silhouette (``wr_chart['pin_elev_m']``,
+        the boom-to-body hinge over the rear wheels) so the drawn boom and the capacity reading use
+        the *same* pin and stay consistent; otherwise falls back to the fitted geometric pivot.
+        """
+        if self.wr_chart and self.wr_chart.get("pin_elev_m") is not None:
+            return float(self.wr_chart["pin_elev_m"])
+        return self.boom_pivot_height_m
+
 
 @dataclass(frozen=True)
 class LiftRequest:

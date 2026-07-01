@@ -249,13 +249,10 @@ def plot_real_chart(result: LiftResult, req: LiftRequest, image_path: str) -> Fi
     # the tip, so stepping headroom up/down moves the load, not the tip.
     tip_h = lift                                    # boom tip = rated point = (reach, vertical lift)
     load_h = max(lift - req.headroom_m, 0.0)        # load / hook: hangs headroom below the tip
-    # Boom-foot pin for the drawing: prefer the point read off this chart's own silhouette (where
-    # the max-angle boom centreline meets the crane body, above the rear wheels), else the fitted
-    # geometric pivot on the slew axis. pin_r_m is the horizontal offset from the slew axis
-    # (negative = behind it, over the rear wheels).
-    pin_z = cal.get("pin_elev_m")
-    if pin_z is None:
-        pin_z = result.crane.boom_pivot_height_m
+    # Boom-foot pin for the drawing: the same pin the capacity math uses (silhouette hinge over the
+    # rear wheels when digitised, else the fitted geometric pivot). pin_r_m is the horizontal offset
+    # from the slew axis (negative = behind it, over the rear wheels).
+    pin_z = result.crane.boom_foot_elev_m
     pin_r = cal.get("pin_r_m", 0.0)
     fx, fy = _to_px(pin_r, pin_z)                    # boom foot pin as drawn on the silhouette
     tx, ty = _to_px(reach, tip_h)                   # boom tip = rated point (fixed re: headroom)
@@ -264,14 +261,15 @@ def plot_real_chart(result: LiftResult, req: LiftRequest, image_path: str) -> Fi
 
     halo = [pe.Stroke(linewidth=3.4, foreground="white", alpha=0.7), pe.Normal()]
 
+    boom_color = "#c8771e"                          # load sketch matches the boom, not black
     ax.plot([lx, gx], [ly, gy], color="#9aa0a6", lw=0.7, linestyle=(0, (2, 3)), zorder=4)  # radius ref
-    boom, = ax.plot([fx, tx], [fy, ty], color="#c8771e", lw=2.6, solid_capstyle="round",
+    boom, = ax.plot([fx, tx], [fy, ty], color=boom_color, lw=2.6, solid_capstyle="round",
                     zorder=5)                                                              # boom
     boom.set_path_effects(halo)                                       # soft white edge -> clean read
     ax.scatter([fx], [fy], s=22, color="#7a4a12", zorder=5)                                # boom foot
-    rope, = ax.plot([tx, lx], [ty, ly], color="#333333", lw=1.0, zorder=5)                 # hoist rope
+    rope, = ax.plot([tx, lx], [ty, ly], color=boom_color, lw=1.1, zorder=5)                # hoist rope
     rope.set_path_effects(halo)
-    _draw_hook(ax, lx, ly, 0.018 * cw)                                                      # load hook
+    _draw_hook(ax, lx, ly, 0.018 * cw, color=boom_color)                                    # load hook
     # Rated point = the boom TIP at (reach, vertical lift); capacity is read here. The hook block
     # hangs the headroom distance below it on the rope, so headroom moves the load, not this point.
     ax.scatter([tx], [ty], s=90, color=color, edgecolors="white", linewidths=1.6, zorder=9)

@@ -34,37 +34,11 @@ from crane_tool.selector import (
 st.set_page_config(page_title="Crane Lifting Study", page_icon="🏗️", layout="wide")
 
 DATA_ROOT = DEFAULT_DATA_DIR.parent  # .../data ; chart images live under data/charts/
-APP_DIR = DATA_ROOT.parent           # repo root (contains .git on a deploy)
 
 
 @st.cache_data
 def _load():
     return load_library()
-
-
-@st.cache_data
-def _build_id() -> str:
-    """Short git commit of the running build, so you can see which version is live."""
-    import subprocess
-
-    try:
-        return (
-            subprocess.check_output(
-                ["git", "rev-parse", "--short", "HEAD"],
-                cwd=APP_DIR, timeout=3, stderr=subprocess.DEVNULL,
-            )
-            .decode()
-            .strip()
-        )
-    except Exception:
-        try:
-            head = (APP_DIR / ".git" / "HEAD").read_text().strip()
-            if head.startswith("ref:"):
-                ref = head.split(" ", 1)[1].strip()
-                return (APP_DIR / ".git" / ref).read_text().strip()[:7]
-            return head[:7]
-        except Exception:
-            return "unknown"
 
 
 def _fig_png(fig) -> io.BytesIO:
@@ -166,7 +140,7 @@ def main() -> None:
                 f"{len(full_library)} instead."
             )
         st.divider()
-        st.caption(f"Crane Lifting Study Tool · built by **TY** · build `{_build_id()}`")
+        st.caption("Crane Lifting Study Tool · built by **TY**")
 
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Horizontal reach √(X²+Y²)", f"{reach:.2f} m")
